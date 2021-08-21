@@ -46,3 +46,5 @@
 
 # Env Files
 .env
+
+db-data/
