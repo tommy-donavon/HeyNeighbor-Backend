@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+  consul:
+    image: consul:latest
+    ports:
+      - "8300:8300"
+      - "8400:8400"
+      - "8500:8500"
+  nginx-data:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+  gateway:
+    image: seges/nginx-consul:1.9.0
+    container_name: gateway
+    volumes_from:
+      - nginx-data
+    ports:
+      - 8080:80
+  message-broker:
+    image: rabbitmq:3-management
+    container_name: message-broker
+    hostname: rabbit 
+    ports: 
+      - '5672:5672'
+      - '15672:15672'
