@@ -37,7 +37,9 @@ func NewUserRepo() *UserRepo {
 	if err != nil {
 		panic(err)
 	}
-	db.AutoMigrate(&User{})
+	if err := db.AutoMigrate(&User{}); err != nil {
+		panic(err)
+	}
 	return &UserRepo{db}
 }
 

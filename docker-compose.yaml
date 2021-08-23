@@ -18,9 +18,9 @@ services:
       - nginx-data
     ports:
       - 8080:80
-  users-db:
+  account-db:
     image: postgres:latest
-    container_name: users-db
+    container_name: account-db
     restart: unless-stopped
     environment: 
       - POSTGRES_USER=postgres
@@ -31,19 +31,19 @@ services:
     ports: 
       - '5438:5432'
     volumes: 
-      - ./users-db/config:/docker-entrypoint-initdb.d/
+      - ./account-db/config:/docker-entrypoint-initdb.d/
   users-service:
     image: meaty/usersapi
     build: 
       context: ./users-service
       dockerfile: Dockerfile
     environment: 
-      - DSN=host=users-db user=admin password=${POSTGRES_PASSWORD} dbname=users port=5432 sslmode=disable
+      - DSN=host=account-db user=admin password=${POSTGRES_PASSWORD} dbname=users port=5432 sslmode=disable
       - PORT=:8080
       - CONSUL_HTTP_ADDR=consul:8500
       - SECRET_KEY=${SECRET_KEY}
     depends_on: 
-      - users-db
+      - account-db
   # message-broker:
   #   image: rabbitmq:3-management
   #   container_name: message-broker

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -11,7 +10,10 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/yhung-mea7/PRO290-twitter-clone/tree/main/users-service/register"
+	"github.com/yhung-mea7/HeyNeighbor/tree/main/account-service/data"
+	"github.com/yhung-mea7/HeyNeighbor/tree/main/account-service/handlers"
+	"github.com/yhung-mea7/HeyNeighbor/tree/main/account-service/register"
+	"github.com/yhung-mea7/HeyNeighbor/tree/main/account-service/routes"
 )
 
 func main() {
@@ -23,11 +25,8 @@ func main() {
 	consulClient.RegisterService() //register users-service to consul
 	defer consulClient.DeregisterService()
 
-	sm.HandleFunc("/healthcheck", func(rw http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(rw).Encode(&struct {
-			Message string `json:"message"`
-		}{"good to go"})
-	})
+	uh := handlers.NewUserHandler(data.NewUserRepo(), logger)
+	routes.SetUpRoutes(sm, uh)
 
 	server := http.Server{
 		Addr:         os.Getenv("PORT"),

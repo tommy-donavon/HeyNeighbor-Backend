@@ -1,4 +1,4 @@
-module github.com/yhung-mea7/PRO290-twitter-clone/tree/main/users-service
+module github.com/yhung-mea7/HeyNeighbor/tree/main/account-service
 
 go 1.14
 

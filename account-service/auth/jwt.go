@@ -46,7 +46,7 @@ func (j *JwtWrapper) CheckToken(providedToken string) (*JwtClaim, error) {
 	}
 	claims, Ok := token.Claims.(*JwtClaim)
 	if !Ok {
-		return nil, errors.New("Failed to parse claims")
+		return nil, errors.New("failed to parse claims")
 	}
 	if claims.ExpiresAt < time.Now().Unix() {
 		return nil, errors.New("JWT is expired")
