@@ -1,4 +1,4 @@
-module github.com/yhung-mea7/HeyNeighbor/tree/main/account-service
+module github.com/yhung-mea7/HeyNeighbor/account-service
 
 go 1.14
 

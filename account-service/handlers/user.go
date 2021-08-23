@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/yhung-mea7/HeyNeighbor/tree/main/account-service/data"
+	"github.com/yhung-mea7/HeyNeighbor/account-service/data"
 )
 
 type (

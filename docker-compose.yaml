@@ -22,32 +22,56 @@ services:
     image: postgres:latest
     container_name: account-db
     restart: unless-stopped
-    environment: 
+    environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - APP_DB_USER=admin
       - APP_DB_PASS=${POSTGRES_PASSWORD}
       - APP_DB_NAME=users
-    ports: 
-      - '5438:5432'
-    volumes: 
+    ports:
+      - "5438:5432"
+    volumes:
       - ./account-db/config:/docker-entrypoint-initdb.d/
-  users-service:
-    image: meaty/usersapi
-    build: 
-      context: ./users-service
+  account-service:
+    image: meaty/accountapi
+    build:
+      context: ./account-service
       dockerfile: Dockerfile
-    environment: 
+    restart: unless-stopped
+    environment:
       - DSN=host=account-db user=admin password=${POSTGRES_PASSWORD} dbname=users port=5432 sslmode=disable
       - PORT=:8080
       - CONSUL_HTTP_ADDR=consul:8500
       - SECRET_KEY=${SECRET_KEY}
-    depends_on: 
+    depends_on:
       - account-db
+  property-db:
+    image: "mongo:latest"
+    container_name: "property-db"
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=property-db
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=pass
+    volumes:
+      - ./property-db/init.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+  property-service:
+    image: meaty/propertyapi
+    build:
+      context: ./property-service
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - PORT=:8080
+      - MONGO_URI=mongodb://admin:pass@property-db:27017/property-db
+      - MONGO_DB=property-db
+      - CONSUL_HTTP_ADDR=consul:8500
+    ports:
+      - 8080
   # message-broker:
   #   image: rabbitmq:3-management
   #   container_name: message-broker
-  #   hostname: rabbit 
-  #   ports: 
+  #   hostname: rabbit
+  #   ports:
   #     - '5672:5672'
   #     - '15672:15672'

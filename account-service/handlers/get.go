@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/yhung-mea7/HeyNeighbor/tree/main/account-service/data"
+	"github.com/yhung-mea7/HeyNeighbor/account-service/data"
 )
 
 func (uh *UserHandler) HealthCheck() http.HandlerFunc {

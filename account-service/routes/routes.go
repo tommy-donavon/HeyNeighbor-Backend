@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/yhung-mea7/HeyNeighbor/tree/main/account-service/handlers"
+	"github.com/yhung-mea7/HeyNeighbor/account-service/handlers"
 )
 
 func SetUpRoutes(sm *mux.Router, userHandler *handlers.UserHandler) {

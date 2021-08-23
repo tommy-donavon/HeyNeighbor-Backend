@@ -3,44 +3,22 @@ package data
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strconv"
 
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type (
-	User struct {
-		gorm.Model
-		Username    string `json:"username" validate:"required" gorm:"unique"`
-		Password    string `json:"password" validate:"required"`
-		FirstName   string `json:"first_name" validate:"required"`
-		LastName    string `json:"last_name" validate:"required"`
-		UnitNumber  uint   `json:"unit_number" validate:"required"`
-		Email       string `json:"email" validate:"email" gorm:"unique"`
-		PhoneNumber string `json:"phone_number" validate:"phone" gorm:"unique"`
-		ProfileURI  string `json:"profile_uri"`
-		AccountType uint   `json:"account_type" validate:"gte=0,lte=1"`
-	}
-
-	UserRepo struct {
-		db *gorm.DB
-	}
-)
-
-func NewUserRepo() *UserRepo {
-	db, err := gorm.Open(postgres.New(postgres.Config{
-		DSN:                  os.Getenv("DSN"),
-		PreferSimpleProtocol: true,
-	}), &gorm.Config{})
-	if err != nil {
-		panic(err)
-	}
-	if err := db.AutoMigrate(&User{}); err != nil {
-		panic(err)
-	}
-	return &UserRepo{db}
+type User struct {
+	gorm.Model
+	Username    string `json:"username" validate:"required" gorm:"unique"`
+	Password    string `json:"password" validate:"required"`
+	FirstName   string `json:"first_name" validate:"required"`
+	LastName    string `json:"last_name" validate:"required"`
+	UnitNumber  uint   `json:"unit_number" validate:"required"`
+	Email       string `json:"email" validate:"email" gorm:"unique"`
+	PhoneNumber string `json:"phone_number" validate:"phone" gorm:"unique"`
+	ProfileURI  string `json:"profile_uri"`
+	AccountType uint   `json:"account_type" validate:"gte=0,lte=1"`
 }
 
 func (ur *UserRepo) CreateUser(user *User) error {
