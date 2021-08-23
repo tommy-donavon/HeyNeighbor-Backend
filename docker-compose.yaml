@@ -41,6 +41,7 @@ services:
       - DSN=host=users-db user=admin password=${POSTGRES_PASSWORD} dbname=users port=5432 sslmode=disable
       - PORT=:8080
       - CONSUL_HTTP_ADDR=consul:8500
+      - SECRET_KEY=${SECRET_KEY}
     depends_on: 
       - users-db
   # message-broker:
