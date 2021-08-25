@@ -6,13 +6,21 @@ import (
 	"github.com/go-playground/validator"
 )
 
-func (p *Property) Validate() error {
+type Validation struct {
+	validate *validator.Validate
+}
+
+func NewValidator() *Validation {
 	validate := validator.New()
 	validate.RegisterValidation("zip", validateZipCode)
-	return validate.Struct(p)
+	return &Validation{validate}
+}
+
+func (v *Validation) Validate(s interface{}) error {
+	return v.validate.Struct(s)
 }
 
 func validateZipCode(fl validator.FieldLevel) bool {
-	re := regexp.MustCompile(`\d{5}(-\d{4})?`)
+	re := regexp.MustCompile(`^\d{5}(-\d{4})?$`)
 	return re.Match([]byte(fl.Field().String()))
 }

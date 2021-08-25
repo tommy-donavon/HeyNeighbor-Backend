@@ -8,6 +8,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/consul/api v1.9.1
 	github.com/leodido/go-urn v1.2.1 // indirect
+	github.com/stretchr/testify v1.7.0
 	go.mongodb.org/mongo-driver v1.7.1
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 )

@@ -15,12 +15,13 @@ type PropertyRepo struct {
 	dbName string
 }
 
+// Creates new mongo connection client
 func NewPropertyRepo() *PropertyRepo {
 	client, err := mongo.NewClient(options.Client().ApplyURI(os.Getenv("MONGO_URI")))
 	if err != nil {
 		panic(err)
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 	if err := client.Connect(ctx); err != nil {
 		panic(err)
@@ -31,10 +32,10 @@ func NewPropertyRepo() *PropertyRepo {
 		ctx,
 		mongo.IndexModel{
 			Keys: bson.D{
-				{Key: "property_street_address", Value: 1},
-				{Key: "property_city", Value: 1},
-				{Key: "property_state", Value: 1},
-				{Key: "property_zip_code", Value: 1},
+				{Key: "address.street_address", Value: 1},
+				{Key: "address.city", Value: 1},
+				{Key: "address.state", Value: 1},
+				{Key: "address.zip_code", Value: 1},
 			},
 			Options: options.Index().SetUnique(true),
 		},
