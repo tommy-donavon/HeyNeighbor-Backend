@@ -8,8 +8,12 @@ import (
 )
 
 func SetUpRoutes(sm *mux.Router, userHandler *handlers.UserHandler) {
-	sm.Use(userHandler.GlobalContentType)
+	sm.Use(userHandler.GlobalContentTypeMiddleware)
 
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
 	getRouter.Handle("/healthcheck", userHandler.HealthCheck())
+
+	createAdminAccountRouter := sm.Methods(http.MethodPost).Subrouter()
+	createAdminAccountRouter.Handle("/create-admin", userHandler.CreateAdminUser())
+	createAdminAccountRouter.Use(userHandler.ValidateUserMiddleware)
 }

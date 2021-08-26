@@ -25,7 +25,7 @@ func main() {
 	consulClient.RegisterService() //register users-service to consul
 	defer consulClient.DeregisterService()
 
-	uh := handlers.NewUserHandler(data.NewUserRepo(), logger)
+	uh := handlers.NewUserHandler(data.NewUserRepo(), logger, os.Getenv("SECRET_KEY"))
 	routes.SetUpRoutes(sm, uh)
 
 	server := http.Server{

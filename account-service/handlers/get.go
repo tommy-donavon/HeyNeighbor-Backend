@@ -9,6 +9,6 @@ import (
 func (uh *UserHandler) HealthCheck() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		uh.log.Println("[GET] Healthcheck")
-		data.ToJSON(&generalMessage{"Service is good to go"}, rw)
+		data.ToJSON(&message{"Service is good to go"}, rw)
 	}
 }

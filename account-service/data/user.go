@@ -4,22 +4,37 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-
-	"gorm.io/gorm"
 )
 
-type User struct {
-	gorm.Model
-	Username    string `json:"username" validate:"required" gorm:"unique"`
-	Password    string `json:"password" validate:"required"`
-	FirstName   string `json:"first_name" validate:"required"`
-	LastName    string `json:"last_name" validate:"required"`
-	UnitNumber  uint   `json:"unit_number" validate:"required"`
-	Email       string `json:"email" validate:"email" gorm:"unique"`
-	PhoneNumber string `json:"phone_number" validate:"phone" gorm:"unique"`
-	ProfileURI  string `json:"profile_uri"`
-	AccountType uint   `json:"account_type" validate:"gte=0,lte=1"`
-}
+type (
+	User struct {
+		Username    string      `json:"username" validate:"required" gorm:"primaryKey"`
+		Password    string      `json:"password,omitempty" validate:"required"`
+		FirstName   string      `json:"first_name" validate:"required"`
+		LastName    string      `json:"last_name" validate:"required"`
+		UnitNumber  uint        `json:"unit_number" validate:"required"`
+		Email       string      `json:"email" validate:"email" gorm:"unique"`
+		PhoneNumber string      `json:"phone_number" validate:"phone" gorm:"unique"`
+		ProfileURI  string      `json:"profile_uri"`
+		AccountType accountType `json:"account_type" validate:"gte=0,lte=2"`
+		UserStatus  status      `json:"user_status" validate:"gte=0,lte=3"`
+	}
+
+	accountType uint
+	status      uint
+)
+
+const (
+	ADMIN accountType = iota
+	BASE
+	SUB
+)
+const (
+	ONLINE status = iota
+	OFFLINE
+	DONOTDISTURB
+	IDLE
+)
 
 func (ur *UserRepo) CreateUser(user *User) error {
 	hash, err := hashPassword(user.Password)
@@ -30,14 +45,14 @@ func (ur *UserRepo) CreateUser(user *User) error {
 	return ur.db.Create(user).Error
 }
 
-func (ur *UserRepo) GetUser(id uint) (*User, error) {
+func (ur *UserRepo) GetUser(username string) (*User, error) {
 	user := User{}
-	err := ur.db.Where("id = ?", id).First(&user).Error
+	err := ur.db.Where("username = ?", username).First(&user).Error
 	return &user, err
 }
 
-func (ur *UserRepo) UpdateUser(id uint, updateInfo map[string]string) error {
-	user, err := ur.GetUser(id)
+func (ur *UserRepo) UpdateUser(username string, updateInfo map[string]string) error {
+	user, err := ur.GetUser(username)
 	if err != nil {
 		return err
 	}
@@ -90,8 +105,8 @@ func (ur *UserRepo) UpdateUser(id uint, updateInfo map[string]string) error {
 	return ur.db.Save(&user).Error
 }
 
-func (ur *UserRepo) DeleteUser(id uint) error {
-	user, err := ur.GetUser(id)
+func (ur *UserRepo) DeleteUser(username string) error {
+	user, err := ur.GetUser(username)
 	if err != nil {
 		return err
 	}

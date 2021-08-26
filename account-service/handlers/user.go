@@ -2,10 +2,8 @@ package handlers
 
 import (
 	"log"
-	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
+	"github.com/yhung-mea7/HeyNeighbor/account-service/auth"
 	"github.com/yhung-mea7/HeyNeighbor/account-service/data"
 )
 
@@ -13,29 +11,38 @@ type (
 	UserHandler struct {
 		repo *data.UserRepo
 		log  *log.Logger
+		jwt  *auth.JwtWrapper
 	}
-	generalMessage struct {
+	message struct {
 		Message interface{} `json:"message"`
 	}
-	userInformation struct {
-		Username string `json:"username"`
-		UserType int    `json:"user_type"`
-	}
-	keyValue struct{}
+
+	contextKey string
 )
 
-func NewUserHandler(repo *data.UserRepo, log *log.Logger) *UserHandler {
+const (
+	uk contextKey = "userKey"
+	lk contextKey = "loginKey"
+	ak contextKey = "adminKey"
+)
+
+func NewUserHandler(repo *data.UserRepo, log *log.Logger, key string) *UserHandler {
 	return &UserHandler{
 		repo: repo,
 		log:  log,
+		jwt: &auth.JwtWrapper{
+			SecretKey:       key,
+			Issuer:          "account-service",
+			ExpirationHours: 24,
+		},
 	}
 }
 
-func getUserId(r *http.Request) uint {
-	vars := mux.Vars(r)
-	id, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		return 0
-	}
-	return uint(id)
-}
+// func getUserName(r *http.Request) uint {
+// 	vars := mux.Vars(r)
+// 	id, err := strconv.Atoi(vars["username"])
+// 	if err != nil {
+// 		return 0
+// 	}
+// 	return uint(id)
+// }
