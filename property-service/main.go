@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -11,7 +10,10 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/yhung-mea7/HeyNeighbor/property-service/data"
+	"github.com/yhung-mea7/HeyNeighbor/property-service/handlers"
 	"github.com/yhung-mea7/HeyNeighbor/property-service/register"
+	"github.com/yhung-mea7/HeyNeighbor/property-service/routes"
 )
 
 func main() {
@@ -22,11 +24,14 @@ func main() {
 	consulClient.RegisterService()
 	defer consulClient.DeregisterService()
 
-	sm.Handle("/healthcheck", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		json.NewEncoder(rw).Encode(&struct {
-			Message string `json:"message"`
-		}{"gud"})
-	}))
+	ph := handlers.NewPropertyHandler(
+		data.NewPropertyRepo(),
+		logger,
+		data.NewValidator(),
+		consulClient,
+	)
+	routes.SetUpRoutes(sm, ph)
+
 	server := http.Server{
 		Addr:         os.Getenv("PORT"),
 		Handler:      sm,
