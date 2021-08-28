@@ -7,7 +7,7 @@ import (
 )
 
 // sets Content-type header to application/json for all request
-func GlobalContentTypeMiddleware(next http.Handler) http.Handler {
+func (ph *PropertyHandler) GlobalContentTypeMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Set("Content-type", "application/json")
 		next.ServeHTTP(rw, r)
@@ -19,6 +19,7 @@ func (ph *PropertyHandler) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		usr, err := ph.getUserInformation(r)
 		if err != nil {
+			ph.log.Println("[ERROR] error getting user information", err)
 			rw.WriteHeader(http.StatusUnauthorized)
 			data.ToJSON(&message{"You are not authorized to make this request"}, rw)
 			return

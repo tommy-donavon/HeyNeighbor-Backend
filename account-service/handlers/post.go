@@ -41,18 +41,13 @@ func (uh *UserHandler) LoginUser() http.HandlerFunc {
 	}
 }
 
-func (uh *UserHandler) CreateAdminUser() http.HandlerFunc {
+func (uh *UserHandler) CreateUser() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		uh.log.Println("POST CREATE ADMIN USER")
 		user, ok := r.Context().Value(uk).(data.User)
 		if !ok {
 			rw.WriteHeader(http.StatusInternalServerError)
 			data.ToJSON(&message{"unable to process login information"}, rw)
-			return
-		}
-		if user.AccountType != data.ADMIN {
-			rw.WriteHeader(http.StatusBadRequest)
-			data.ToJSON(&message{"unable to create admin user with provided user account type"}, rw)
 			return
 		}
 		if err := uh.repo.CreateUser(&user); err != nil {
@@ -62,49 +57,5 @@ func (uh *UserHandler) CreateAdminUser() http.HandlerFunc {
 			return
 		}
 		rw.WriteHeader(http.StatusNoContent)
-	}
-}
-
-func (uh *UserHandler) CreateTenantAccount() http.HandlerFunc {
-	return func(rw http.ResponseWriter, r *http.Request) {
-		uh.log.Println("POST CREATE Tenant USER")
-		newUser, ok := r.Context().Value(uk).(data.User)
-		if !ok {
-			rw.WriteHeader(http.StatusInternalServerError)
-			data.ToJSON(&message{"unable to process login information"}, rw)
-			return
-		}
-		adUser, ok := r.Context().Value(ak).(data.User)
-		if !ok {
-			rw.WriteHeader(http.StatusInternalServerError)
-			data.ToJSON(&message{"unable to process login information"}, rw)
-			return
-		}
-		switch adUser.AccountType {
-		case data.ADMIN:
-			newUser.AccountType = data.BASE
-		case data.BASE:
-			newUser.AccountType = data.SUB
-			newUser.UnitNumber = adUser.UnitNumber
-		default:
-			rw.WriteHeader(http.StatusUnauthorized)
-			data.ToJSON(&message{"sub accounts can not create other accounts"}, rw)
-			return
-		}
-		if err := uh.repo.CreateUser(&newUser); err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			data.ToJSON(&message{"unable to save user"}, rw)
-			return
-		}
-		token, err := uh.jwt.CreateJwToken(newUser.Username, int(newUser.AccountType))
-		if err != nil {
-			uh.log.Println(err.Error())
-			rw.WriteHeader(http.StatusInternalServerError)
-			data.ToJSON(&message{"Failed to sign token"}, rw)
-			return
-		}
-		data.ToJSON(&struct {
-			Token string `json:"token"`
-		}{token}, rw)
 	}
 }

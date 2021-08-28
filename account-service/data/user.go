@@ -12,7 +12,7 @@ type (
 		Password    string      `json:"password,omitempty" validate:"required"`
 		FirstName   string      `json:"first_name" validate:"required"`
 		LastName    string      `json:"last_name" validate:"required"`
-		UnitNumber  uint        `json:"unit_number" validate:"required"`
+		UnitNumber  uint        `json:"unit_number"`
 		Email       string      `json:"email" validate:"email" gorm:"unique"`
 		PhoneNumber string      `json:"phone_number" validate:"phone" gorm:"unique"`
 		ProfileURI  string      `json:"profile_uri"`
@@ -92,6 +92,15 @@ func (ur *UserRepo) UpdateUser(username string, updateInfo map[string]string) er
 				user.PhoneNumber = value
 			case "profile_uri":
 				user.ProfileURI = value
+			case "user_status":
+				iv, err := strconv.ParseUint(value, 10, 32)
+				if err != nil {
+					return err
+				}
+				if iv > 3 {
+					return fmt.Errorf("%d is not a valid status", iv)
+				}
+				user.UserStatus = status(iv)
 			}
 		} else {
 			return fmt.Errorf("%s is not a valid field", key)

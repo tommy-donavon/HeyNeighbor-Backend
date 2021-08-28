@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"bytes"
 	"errors"
+	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/yhung-mea7/HeyNeighbor/property-service/data"
 	"github.com/yhung-mea7/HeyNeighbor/property-service/register"
@@ -51,19 +52,13 @@ func sendNewRequest(reqOptions *requestOptions) (*http.Response, error) {
 		return nil, err
 	}
 
-	var rBody *bytes.Buffer
-	if reqOptions.body != nil {
-		rBody = bytes.NewBuffer(reqOptions.body)
-	} else {
-		rBody = nil
-	}
-	req, err := http.NewRequest(
-		reqOptions.methodType,
-		ser.GetHTTP()+reqOptions.endpoint,
-		rBody,
-	)
+	req, err := http.NewRequest(reqOptions.methodType, ser.GetHTTP()+reqOptions.endpoint, nil)
 	if err != nil {
 		return nil, err
+	}
+	if reqOptions.body != nil {
+
+		req.Body = ioutil.NopCloser(strings.NewReader(string(reqOptions.body)))
 	}
 
 	for key, value := range reqOptions.headers {

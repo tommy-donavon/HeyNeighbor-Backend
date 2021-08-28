@@ -8,6 +8,8 @@ import (
 )
 
 func SetUpRoutes(sm *mux.Router, ph *handlers.PropertyHandler) {
+	sm.Use(ph.GlobalContentTypeMiddleware)
+
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
 	getRouter.Handle("/healthcheck", ph.HealthCheck())
 

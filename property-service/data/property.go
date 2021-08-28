@@ -10,7 +10,8 @@ type (
 		PropertyName    string    `json:"property_name" validate:"required"`
 		PropertyAddress *Address  `json:"address" validate:"required,dive,required"`
 		PropertyManager string    `json:"property_manager" validate:"required"`
-		Tenets          []*string `json:"tenets"`
+		NumOfUnits      uint      `json:"num_of_units" validate:"required"`
+		Tenants         []*string `json:"tenants"`
 		Channels        []*string `json:"channels"`
 	}
 	Address struct {
