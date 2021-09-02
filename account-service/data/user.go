@@ -12,11 +12,10 @@ type (
 		Password    string      `json:"password,omitempty" validate:"required"`
 		FirstName   string      `json:"first_name" validate:"required"`
 		LastName    string      `json:"last_name" validate:"required"`
-		UnitNumber  uint        `json:"unit_number"`
 		Email       string      `json:"email" validate:"email" gorm:"unique"`
 		PhoneNumber string      `json:"phone_number" validate:"phone" gorm:"unique"`
 		ProfileURI  string      `json:"profile_uri"`
-		AccountType accountType `json:"account_type" validate:"gte=0,lte=2"`
+		AccountType accountType `json:"account_type" validate:"gte=0,lte=1"`
 		UserStatus  status      `json:"user_status" validate:"gte=0,lte=3"`
 	}
 
@@ -27,7 +26,6 @@ type (
 const (
 	ADMIN accountType = iota
 	BASE
-	SUB
 )
 const (
 	ONLINE status = iota
@@ -80,12 +78,6 @@ func (ur *UserRepo) UpdateUser(username string, updateInfo map[string]string) er
 				user.FirstName = value
 			case "last_name":
 				user.LastName = value
-			case "unit_number":
-				u, err := strconv.ParseUint(value, 10, 32)
-				if err != nil {
-					return err
-				}
-				user.UnitNumber = uint(u)
 			case "email":
 				user.Email = value
 			case "phone_number":

@@ -47,6 +47,7 @@ func (s *testSuite) TestPropertyValidation() {
 			ZipCode:       "84444",
 		},
 		PropertyManager: "shell",
+		NumOfUnits:      400,
 	}
 	//should fail
 	prop2 := &Property{
@@ -64,6 +65,42 @@ func (s *testSuite) TestPropertyValidation() {
 	}
 	assert.Error(s.T(), validate.Validate(prop2))
 
+}
+
+func (s *testSuite) TestTenantValidation() {
+	validate := NewValidator()
+	prop := &Property{
+		PropertyName: "test",
+		PropertyAddress: &Address{
+			StreetAddress: "24 South 650 East",
+			City:          "Salt Lake City",
+			State:         "UT",
+			ZipCode:       "84444-1211",
+		},
+		PropertyManager: "shell",
+		NumOfUnits:      400,
+		Tenants: []*Tenant{
+			{
+				Username:   "timmy",
+				Nickname:   "timtim",
+				UnitNumber: 102,
+			},
+		},
+	}
+	prop2 := &Property{
+		PropertyName: "test",
+		PropertyAddress: &Address{
+			StreetAddress: "24 South 650 East",
+			City:          "Salt Lake City",
+			State:         "UT",
+			ZipCode:       "84444-1211",
+		},
+		PropertyManager: "shell",
+		NumOfUnits:      400,
+	}
+
+	assert.NoError(s.T(), validate.Validate(prop))
+	assert.NoError(s.T(), validate.Validate(prop2))
 }
 
 func TestInit(t *testing.T) {

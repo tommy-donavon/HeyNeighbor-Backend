@@ -15,6 +15,7 @@ type PropertyRepo struct {
 	dbName string
 }
 
+//TODO make sure tenant username and nickname are unique for each property
 // Creates new mongo connection client
 func NewPropertyRepo() *PropertyRepo {
 	client, err := mongo.NewClient(options.Client().ApplyURI(os.Getenv("MONGO_URI")))
