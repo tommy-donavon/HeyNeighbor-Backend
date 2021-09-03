@@ -17,4 +17,12 @@ func SetUpRoutes(sm *mux.Router, ph *handlers.PropertyHandler) {
 	createPropertyRouter.Handle("/", ph.CreateProperty())
 	createPropertyRouter.Use(ph.AuthMiddleware)
 	createPropertyRouter.Use(ph.ValidatePropertyMiddleware)
+
+	postRouter := sm.Methods(http.MethodPost).Subrouter()
+	postRouter.Handle("/add-tenant", ph.AddTenantToProperty())
+	postRouter.Use(ph.AuthMiddleware)
+
+	getProperties := sm.Methods(http.MethodGet).Subrouter()
+	getProperties.Handle("/", ph.GetProperties())
+	getProperties.Use(ph.AuthMiddleware)
 }

@@ -18,11 +18,11 @@ const (
 	events string = "Events"
 )
 
-func (pr *PropertyRepo) AddChannelToProperty(addr *Address, channel string) error {
+func (pr *PropertyRepo) AddChannelToProperty(servercode, channel string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	coll := pr.client.Database(pr.dbName).Collection("properties")
 	defer cancel()
-	prop, err := pr.GetProperty(addr)
+	prop, err := pr.GetPropertyByServerCode(servercode)
 	if err != nil {
 		return err
 	}
@@ -45,14 +45,14 @@ func (pr *PropertyRepo) AddChannelToProperty(addr *Address, channel string) erro
 	return err
 }
 
-func (pr *PropertyRepo) RemoveChannelFromProperty(addr *Address, channel string) error {
+func (pr *PropertyRepo) RemoveChannelFromProperty(serverCode, channel string) error {
 	if channel == general || channel == announcements || channel == events {
 		return fmt.Errorf("%s is unable to be removed from list", channel)
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	coll := pr.client.Database(pr.dbName).Collection("properties")
 	defer cancel()
-	prop, err := pr.GetProperty(addr)
+	prop, err := pr.GetPropertyByServerCode(serverCode)
 	if err != nil {
 		return err
 	}

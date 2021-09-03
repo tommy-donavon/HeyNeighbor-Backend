@@ -21,7 +21,7 @@ type (
 	}
 	userInformation struct {
 		Username   string `json:"username"`
-		UserType   int    `json:"user_type"`
+		UserType   int    `json:"account_type"`
 		ProfileUri string `json:"profile_uri"`
 	}
 )

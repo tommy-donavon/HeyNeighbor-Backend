@@ -53,3 +53,24 @@ func (ph *PropertyHandler) ValidatePropertyMiddleware(next http.Handler) http.Ha
 		next.ServeHTTP(rw, r)
 	})
 }
+
+func (ph *PropertyHandler) ValidateAddressMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		addr := data.Address{}
+		if err := data.FromJSON(&addr, r.Body); err != nil {
+			ph.log.Println("[ERROR] deserializing request body", err)
+			rw.WriteHeader(http.StatusInternalServerError)
+			data.ToJSON(&message{"unable to read in request body"}, rw)
+			return
+		}
+		if err := ph.validator.Validate(addr); err != nil {
+			ph.log.Println("[ERROR] property is not correctly formated", err)
+			rw.WriteHeader(http.StatusBadRequest)
+			data.ToJSON(&message{err.Error()}, rw)
+			return
+		}
+		ctx := ph.ctxHandler.add(r.Context(), "addressinfo", addr)
+		r = r.WithContext(ctx)
+		next.ServeHTTP(rw, r)
+	})
+}

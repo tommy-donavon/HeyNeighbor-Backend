@@ -18,6 +18,7 @@ type PropertyRepo struct {
 
 // Creates new mongo connection client
 func NewPropertyRepo() *PropertyRepo {
+	rand.Seed(time.Now().UnixNano())
 	client, err := mongo.NewClient(options.Client().ApplyURI(os.Getenv("MONGO_URI")))
 	if err != nil {
 		panic(err)
@@ -37,10 +38,6 @@ func NewPropertyRepo() *PropertyRepo {
 				{Key: "address.state", Value: 1},
 				{Key: "address.zip_code", Value: 1},
 			},
-			Options: options.Index().SetUnique(true),
-		},
-		{
-			Keys:    bson.D{{Key: "tenants.nickname", Value: 1}},
 			Options: options.Index().SetUnique(true),
 		},
 		{

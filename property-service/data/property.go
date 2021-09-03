@@ -12,13 +12,13 @@ import (
 
 type Property struct {
 	ID              primitive.ObjectID `bson:"_id,omitempty" json:"-"`
-	PropertyName    string             `json:"property_name" validate:"required"`
-	PropertyAddress *Address           `json:"address" validate:"required,dive,required"`
-	PropertyManager string             `json:"property_manager"`
-	NumOfUnits      uint               `json:"num_of_units" validate:"required"`
-	ServerCode      string             `json:"server_code"`
-	Tenants         []*Tenant          `json:"tenants" validate:"dive"`
-	Channels        []string           `json:"channels"`
+	PropertyName    string             `bson:"property_name" json:"property_name" validate:"required"`
+	PropertyAddress *Address           `bson:"address" json:"address" validate:"required,dive,required"`
+	PropertyManager string             `bson:"property_manager" json:"property_manager"`
+	NumOfUnits      uint               `bson:"num_of_units" json:"num_of_units" validate:"required"`
+	ServerCode      string             `bson:"server_code" json:"server_code"`
+	Tenants         []*Tenant          `bson:"tenants" json:"tenants" validate:"dive"`
+	Channels        []string           `bson:"channels" json:"channels"`
 }
 
 //Inserts property document into mongo database
@@ -29,35 +29,72 @@ func (pr *PropertyRepo) CreateProperty(prop *Property) error {
 	prop.Channels = append(prop.Channels, general)
 	prop.Channels = append(prop.Channels, announcements)
 	prop.Channels = append(prop.Channels, events)
-	_, err := coll.InsertOne(ctx, prop)
+	_, err := coll.InsertOne(ctx, &prop)
 	return err
 }
 
 // queries property collection by provided address.
 //
 // returns a reference to found property or an error
-func (pr *PropertyRepo) GetProperty(addr *Address) (*Property, error) {
+// func (pr *PropertyRepo) GetProperty(addr *Address) (*Property, error) {
+// 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+// 	defer cancel()
+// 	coll := pr.client.Database(pr.dbName).Collection("properties")
+// 	result := coll.FindOne(ctx, bson.M{
+// 		"address.street_address": addr.StreetAddress,
+// 		"address.city":           addr.City,
+// 		"address.state":          addr.State,
+// 		"address.zip_code":       addr.ZipCode,
+// 	})
+// 	prop := Property{}
+// 	if err := result.Decode(prop); err != nil {
+// 		return nil, err
+// 	}
+// 	return &prop, nil
+// }
+
+func (pr *PropertyRepo) GetPropertyByServerCode(serverCode string) (*Property, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 	coll := pr.client.Database(pr.dbName).Collection("properties")
-	result := coll.FindOne(ctx, bson.M{
-		"address.street_address": addr.StreetAddress,
-		"address.city":           addr.City,
-		"address.state":          addr.State,
-		"address.zip_code":       addr.ZipCode,
-	})
+	result := coll.FindOne(
+		ctx,
+		bson.M{"server_code": serverCode},
+	)
 	prop := Property{}
-	if err := result.Decode(prop); err != nil {
+	if err := result.Decode(&prop); err != nil {
 		return nil, err
 	}
 	return &prop, nil
 }
 
-// updates base fields for a property
-func (pr *PropertyRepo) UpdateProperty(addr *Address, updateInfo map[string]interface{}) error {
+func (pr *PropertyRepo) GetAllManagerProperties(propertyManager string) ([]*Property, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
-	prop, err := pr.GetProperty(addr)
+	coll := pr.client.Database(pr.dbName).Collection("properties")
+	result, err := coll.Find(
+		ctx,
+		bson.M{"property_manager": propertyManager},
+	)
+	if err != nil {
+		return nil, err
+	}
+	results := []*Property{}
+	for result.Next(ctx) {
+		prop := Property{}
+		if err := result.Decode(&prop); err != nil {
+			return nil, err
+		}
+		results = append(results, &prop)
+	}
+	return results, nil
+}
+
+// updates base fields for a property
+func (pr *PropertyRepo) UpdateProperty(server_code string, updateInfo map[string]interface{}) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+	prop, err := pr.GetPropertyByServerCode(server_code)
 	if err != nil {
 		return err
 	}
@@ -130,10 +167,10 @@ func (pr *PropertyRepo) UpdateProperty(addr *Address, updateInfo map[string]inte
 }
 
 // deletes a property
-func (pr *PropertyRepo) DeleteProperty(addr *Address) error {
+func (pr *PropertyRepo) DeleteProperty(serverCode string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
-	prop, err := pr.GetProperty(addr)
+	prop, err := pr.GetPropertyByServerCode(serverCode)
 	if err != nil {
 		return err
 	}

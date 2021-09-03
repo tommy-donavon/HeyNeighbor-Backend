@@ -9,22 +9,19 @@ import (
 )
 
 type Tenant struct {
-	Username   string `json:"username" validate:"required"`
+	Username   string `json:"username"`
 	Nickname   string `json:"nickname"`
-	UnitNumber uint   `json:"unit_number" validate:"required"`
+	UnitNumber uint   `json:"unit_number"`
+	ProfileURI string `json:"profile_uri"`
 }
 
 //TODO add method to update tenant server nickname
 
 // add tenant
-func (pr *PropertyRepo) AddTenantToProperty(addr *Address, ten *Tenant) error {
+func (pr *PropertyRepo) AddTenantToProperty(prop *Property, ten *Tenant) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 	coll := pr.client.Database(pr.dbName).Collection("properties")
-	prop, err := pr.GetProperty(addr)
-	if err != nil {
-		return err
-	}
 	for _, t := range prop.Tenants {
 		if t.Username == ten.Username {
 			return fmt.Errorf("%s is already in server", ten.Username)
@@ -33,7 +30,7 @@ func (pr *PropertyRepo) AddTenantToProperty(addr *Address, ten *Tenant) error {
 		}
 	}
 	prop.Tenants = append(prop.Tenants, ten)
-	_, err = coll.UpdateOne(
+	_, err := coll.UpdateOne(
 		ctx,
 		bson.M{"_id": prop.ID},
 		bson.D{
@@ -46,11 +43,11 @@ func (pr *PropertyRepo) AddTenantToProperty(addr *Address, ten *Tenant) error {
 	return err
 }
 
-func (pr *PropertyRepo) RemoveTenantFromProperty(addr *Address, tenUsername string) error {
+func (pr *PropertyRepo) RemoveTenantFromProperty(serverCode, tenUsername string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 	coll := pr.client.Database(pr.dbName).Collection("properties")
-	prop, err := pr.GetProperty(addr)
+	prop, err := pr.GetPropertyByServerCode(serverCode)
 	if err != nil {
 		return err
 	}
