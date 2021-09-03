@@ -53,6 +53,8 @@ services:
       - MONGO_INITDB_DATABASE=property-db
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=pass
+    ports: 
+      - '27017-27019:27017-27019'
     volumes:
       - ./property-db/init.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
   property-service:
@@ -68,6 +70,9 @@ services:
       - CONSUL_HTTP_ADDR=consul:8500
     ports:
       - 8080
+    depends_on: 
+      - "property-db"
+      - "consul"
   # message-broker:
   #   image: rabbitmq:3-management
   #   container_name: message-broker

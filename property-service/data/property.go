@@ -14,10 +14,11 @@ type Property struct {
 	ID              primitive.ObjectID `bson:"_id,omitempty" json:"-"`
 	PropertyName    string             `json:"property_name" validate:"required"`
 	PropertyAddress *Address           `json:"address" validate:"required,dive,required"`
-	PropertyManager string             `json:"property_manager" validate:"required"`
+	PropertyManager string             `json:"property_manager"`
 	NumOfUnits      uint               `json:"num_of_units" validate:"required"`
+	ServerCode      string             `json:"server_code"`
 	Tenants         []*Tenant          `json:"tenants" validate:"dive"`
-	Channels        []*string          `json:"channels"`
+	Channels        []string           `json:"channels"`
 }
 
 //Inserts property document into mongo database
@@ -25,10 +26,9 @@ func (pr *PropertyRepo) CreateProperty(prop *Property) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
 	coll := pr.client.Database(pr.dbName).Collection("properties")
-	gen, ann, evnt := "general", "announcements", "events"
-	prop.Channels = append(prop.Channels, &gen)
-	prop.Channels = append(prop.Channels, &ann)
-	prop.Channels = append(prop.Channels, &evnt)
+	prop.Channels = append(prop.Channels, general)
+	prop.Channels = append(prop.Channels, announcements)
+	prop.Channels = append(prop.Channels, events)
 	_, err := coll.InsertOne(ctx, prop)
 	return err
 }

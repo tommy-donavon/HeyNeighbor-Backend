@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"math/rand"
 	"os"
 	"time"
 
@@ -15,7 +16,6 @@ type PropertyRepo struct {
 	dbName string
 }
 
-//TODO make sure tenant username and nickname are unique for each property
 // Creates new mongo connection client
 func NewPropertyRepo() *PropertyRepo {
 	client, err := mongo.NewClient(options.Client().ApplyURI(os.Getenv("MONGO_URI")))
@@ -29,9 +29,8 @@ func NewPropertyRepo() *PropertyRepo {
 	}
 	dbName := os.Getenv("MONGO_DB")
 	coll := client.Database(dbName).Collection("properties")
-	_, err = coll.Indexes().CreateOne(
-		ctx,
-		mongo.IndexModel{
+	indexes := []mongo.IndexModel{
+		{
 			Keys: bson.D{
 				{Key: "address.street_address", Value: 1},
 				{Key: "address.city", Value: 1},
@@ -40,9 +39,27 @@ func NewPropertyRepo() *PropertyRepo {
 			},
 			Options: options.Index().SetUnique(true),
 		},
-	)
+		{
+			Keys:    bson.D{{Key: "tenants.nickname", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+		{
+			Keys:    bson.D{{Key: "server_code", Value: 1}},
+			Options: options.Index().SetUnique(true),
+		},
+	}
+	_, err = coll.Indexes().CreateMany(ctx, indexes)
 	if err != nil {
 		panic(err)
 	}
 	return &PropertyRepo{client, dbName}
+}
+
+func (pr *PropertyRepo) GenerateServerCode(propName string) string {
+	b := make([]rune, 10)
+	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&")
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return propName + "-" + string(b)
 }

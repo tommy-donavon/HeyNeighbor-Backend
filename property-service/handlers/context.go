@@ -35,7 +35,9 @@ func (c *contextHandler) add(ctx context.Context, key string, value interface{})
 
 	ctxMap, ok := ctx.Value(ck).(contextValues)
 	if !ok {
-		ctxMap = contextValues{}
+		ctxMap = contextValues{
+			values: make(map[string]interface{}),
+		}
 	}
 	ctxMap.values[key] = value
 	return context.WithValue(ctx, ck, ctxMap)

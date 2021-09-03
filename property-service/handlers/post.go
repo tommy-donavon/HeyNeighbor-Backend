@@ -22,13 +22,14 @@ func (ph *PropertyHandler) CreateProperty() http.HandlerFunc {
 			return
 		}
 		prop := propCtx.(data.Property)
-		usr := usrCtx.(userInformation)
+		usr := usrCtx.(*userInformation)
 		if usr.UserType != 0 {
 			rw.WriteHeader(http.StatusForbidden)
 			data.ToJSON(&message{"You are not authorized to make this request"}, rw)
 			return
 		}
 		prop.PropertyManager = usr.Username
+		prop.ServerCode = ph.repo.GenerateServerCode(prop.PropertyName)
 		if err := ph.repo.CreateProperty(&prop); err != nil {
 			ph.log.Println("[ERROR] Unable to create property", err)
 			rw.WriteHeader(http.StatusInternalServerError)
