@@ -1,0 +1,30 @@
+{
+  "name": "typescripttest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "dev": "ts-node src/app.ts",
+    "start": "ts-node dist/app.js",
+    "build": "tsc -p ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/consul": "^0.23.35",
+    "@types/express": "^4.17.13",
+    "@types/node": "^16.7.11",
+    "ts-node": "^10.2.1"
+  },
+  "type": "module",
+  "dependencies": {
+    "consul": "^0.40.0",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "mongoose": "^6.0.5",
+    "socket.io": "^4.2.0",
+    "typescript": "^4.4.2"
+  }
+}

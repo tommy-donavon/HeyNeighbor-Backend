@@ -33,26 +33,6 @@ func (pr *PropertyRepo) CreateProperty(prop *Property) error {
 	return err
 }
 
-// queries property collection by provided address.
-//
-// returns a reference to found property or an error
-// func (pr *PropertyRepo) GetProperty(addr *Address) (*Property, error) {
-// 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
-// 	defer cancel()
-// 	coll := pr.client.Database(pr.dbName).Collection("properties")
-// 	result := coll.FindOne(ctx, bson.M{
-// 		"address.street_address": addr.StreetAddress,
-// 		"address.city":           addr.City,
-// 		"address.state":          addr.State,
-// 		"address.zip_code":       addr.ZipCode,
-// 	})
-// 	prop := Property{}
-// 	if err := result.Decode(prop); err != nil {
-// 		return nil, err
-// 	}
-// 	return &prop, nil
-// }
-
 func (pr *PropertyRepo) GetPropertyByServerCode(serverCode string) (*Property, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
 	defer cancel()
