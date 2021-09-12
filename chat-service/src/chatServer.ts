@@ -1,6 +1,8 @@
-import express, { Application, Request, Response } from "express";
+import express, { Application } from "express";
 import http from "http";
-import { Namespace, Server, Socket } from "socket.io";
+import { Server, Socket } from "socket.io";
+import redisAdapter from "@socket.io/redis-adapter";
+import redis from "redis";
 import url from "url";
 import { IProperty } from "./model";
 import {
@@ -20,7 +22,14 @@ export class ChatServer {
     this.app = express();
     this.port = process.env.PORT || ChatServer.PORT;
     this.server = http.createServer(this.app);
-    this.io = new Server().listen(this.server);
+    this.io = new Server({ path: "/" }).listen(this.server);
+
+    const pubClient = redis.createClient({
+      host: process.env.REDIS_HOST,
+      port: Number(process.env.REDIS_PORT),
+    });
+    const subClient = pubClient.duplicate();
+    this.io.adapter(redisAdapter.createAdapter(pubClient, subClient));
 
     this.server.listen(this.port, () => {
       var details = newConsulDetails("chat-service", <number>this.port);
@@ -33,35 +42,31 @@ export class ChatServer {
       });
     });
 
-    this.io.sockets.on("connection", (socket: Socket) => {
-      var handShackURL = url.parse(socket.handshake.url, true);
-      var ns = handShackURL.query.ns;
-      var room = handShackURL.query.room;
+    const ns = this.io.of(/\/\w+/);
+    ns.on("connection", (socket: Socket) => {
+      var room = url.parse(socket.handshake.url, true).query.room;
 
-      if (typeof room !== "string" || typeof ns !== "string") {
+      if (typeof room !== "string") {
         socket.disconnect(true);
       }
       var validNs = props.filter(
         (p) =>
-          p.serverCode === (ns as string) && p.Channels.includes(room as string)
+          p.serverCode === socket.nsp.name.substr(1) &&
+          p.Channels.includes(room as string)
       );
       if (validNs.length !== 1) {
         socket.disconnect(true);
         return;
       }
+      socket.join(room as string);
+      console.log(
+        `socket joined room ${room} in namespace ${socket.nsp.name.substr(1)}`
+      );
 
-      this.io.of(ns as string).on("connection", (s2: Socket) => {
-        s2.join(room as string);
-        console.log(`socket joined room: ${room} in namespace: ${ns}`);
-
-        s2.on("disconnect", (reason: string) => {
-          s2.leave(room as string);
-          console.log(reason);
-        });
-      });
       socket.on("disconnect", (reason: string) => console.log(reason));
       socket.on("error", (err: Error) => {
         console.log(err);
+        socket.leave(room as string);
         socket.disconnect(true);
       });
     });
