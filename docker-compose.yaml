@@ -86,6 +86,9 @@ services:
       - CONSUL_HTTP_ADDR=consul:8500
     ports:
       - 8080
+    depends_on:
+      - "chat-redis-store"
+      - "consul"
   chat-redis-store:
     image: redis:alpine
     container_name: chat-redis-store
