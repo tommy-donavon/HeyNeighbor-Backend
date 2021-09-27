@@ -15,6 +15,6 @@ let props: IProperty[] = [
         ]
     }
 ]
-let app = new ChatServer(props).getApp()
+let app = new ChatServer().getApp()
 
 export {app};

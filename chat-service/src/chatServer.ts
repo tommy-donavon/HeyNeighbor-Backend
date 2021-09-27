@@ -4,12 +4,13 @@ import { Server, Socket } from 'socket.io';
 import redisAdapter from '@socket.io/redis-adapter';
 import redis from 'redis';
 import url from 'url';
-import { IProperty } from './model';
+import { getUser, getProperty } from './utils/request.js';
 import {
   newConsulDetails,
   registerService,
   deregisterService,
 } from './register/register.js';
+import { IProperty } from './model/property.js';
 
 export class ChatServer {
   public static readonly PORT: number = 8080;
@@ -18,13 +19,13 @@ export class ChatServer {
   private io: Server;
   private port: string | number;
 
-  constructor(props: IProperty[]) {
+  constructor() {
     this.app = express();
     this.port = process.env.PORT || ChatServer.PORT;
     this.server = http.createServer(this.app);
     this.io = new Server({
       path: '/',
-      transports: ['websocket','polling'],
+      transports: ['websocket', 'polling'],
       cors: {
         origin: '*',
         methods: ['GET', 'POST'],
@@ -51,26 +52,21 @@ export class ChatServer {
       });
     });
 
+    //TODO finish
     const ns = this.io.of(/\/\w+/);
-    ns.on('connection', (socket: Socket) => {
-      console.log(socket.handshake.url)
+    ns.on('connection', async (socket: Socket) => {
       var room = url.parse(socket.handshake.url, true).query.room;
-      console.log(room)
-      var ns = socket.nsp.name.replace(/[/]/g,"");
-      console.log(ns)
-
-      // if (typeof room !== 'string') {
-      //   socket.disconnect(true);
-      // }
-      var validNs = props.filter(
-        (p) =>
-          p.serverCode === ns &&
-          p.Channels.includes(room as string),
+      var server_code = socket.nsp.name.replace(/[/]/g, '');
+      const user = await getUser(socket.request.headers.authorization);
+      if (user instanceof Error) socket.disconnect(true);
+      const prop = await getProperty(
+        server_code,
+        socket.request.headers.authorization as string,
       );
-      if (validNs.length !== 1) {
-        socket.disconnect(true);
-        return;
-      }
+      if (prop instanceof Error) socket.disconnect(true);
+      var validChannel = (prop as IProperty).Channels.includes(room as string);
+      if (!validChannel) socket.disconnect(true);
+
       socket.join(room as string);
       console.log(
         `socket joined room ${room} in namespace ${socket.nsp.name.substr(1)}`,
@@ -82,7 +78,7 @@ export class ChatServer {
 
       socket.on('disconnect', (reason: string) => console.log(reason));
       socket.on('error', (err: Error) => {
-        console.log(err);
+        console.error(err);
         socket.leave(room as string);
         socket.disconnect(true);
       });

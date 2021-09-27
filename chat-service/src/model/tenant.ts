@@ -1,6 +1,11 @@
 export interface ITenant {
   username: string;
-  nickname: string;
-  unit_number: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number: string;
   profile_uri: string;
+  account_type: number;
+  user_status: number;
+
 }

@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"log"
+	"net/http"
 
+	"github.com/gorilla/mux"
 	"github.com/yhung-mea7/HeyNeighbor/property-service/data"
 	"github.com/yhung-mea7/HeyNeighbor/property-service/register"
 )
@@ -19,11 +21,6 @@ type (
 	message struct {
 		Message interface{} `json:"message"`
 	}
-	userInformation struct {
-		Username   string `json:"username"`
-		UserType   int    `json:"account_type"`
-		ProfileUri string `json:"profile_uri"`
-	}
 )
 
 //Creates new PropertyHandler.
@@ -36,4 +33,13 @@ func NewPropertyHandler(repo *data.PropertyRepo, log *log.Logger, v *data.Valida
 	}
 	ph.ctxHandler = &contextHandler{}
 	return ph
+}
+
+func getServerCode(r *http.Request) string {
+	vars := mux.Vars(r)
+	code, ok := vars["code"]
+	if !ok {
+		return ""
+	}
+	return code
 }

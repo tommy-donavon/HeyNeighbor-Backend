@@ -9,10 +9,16 @@ import (
 )
 
 type Tenant struct {
-	Username   string `json:"username"`
-	Nickname   string `json:"nickname"`
-	UnitNumber uint   `json:"unit_number"`
-	ProfileURI string `json:"profile_uri"`
+	Username    string `json:"username"`
+	Nickname    string `json:"nickname"`
+	UnitNumber  uint   `json:"unit_number"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
+	ProfileURI  string `json:"profile_uri"`
+	AccountType uint   `json:"account_type"`
+	UserStatus  uint   `json:"user_status"`
 }
 
 //TODO add method to update tenant server nickname
@@ -41,6 +47,28 @@ func (pr *PropertyRepo) AddTenantToProperty(prop *Property, ten *Tenant) error {
 		},
 	)
 	return err
+}
+
+func (pr *PropertyRepo) GetAllTenantProperties(tenantUsername string) ([]*Property, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)
+	defer cancel()
+	coll := pr.client.Database(pr.dbName).Collection("properties")
+	result, err := coll.Find(
+		ctx,
+		bson.M{"tenants.username": tenantUsername},
+	)
+	if err != nil {
+		return nil, err
+	}
+	results := []*Property{}
+	for result.Next(ctx) {
+		prop := Property{}
+		if err := result.Decode(&prop); err != nil {
+			return nil, err
+		}
+		results = append(results, &prop)
+	}
+	return results, nil
 }
 
 func (pr *PropertyRepo) RemoveTenantFromProperty(serverCode, tenUsername string) error {

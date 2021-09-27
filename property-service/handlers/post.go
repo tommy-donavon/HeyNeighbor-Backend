@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/yhung-mea7/HeyNeighbor/property-service/data"
 )
@@ -22,8 +23,8 @@ func (ph *PropertyHandler) CreateProperty() http.HandlerFunc {
 			return
 		}
 		prop := propCtx.(data.Property)
-		usr := usrCtx.(*userInformation)
-		if usr.UserType != 0 {
+		usr := usrCtx.(*data.Tenant)
+		if usr.AccountType != 0 {
 			rw.WriteHeader(http.StatusForbidden)
 			data.ToJSON(&message{"You are not authorized to make this request"}, rw)
 			return
@@ -40,7 +41,7 @@ func (ph *PropertyHandler) CreateProperty() http.HandlerFunc {
 	}
 }
 
-//TODO finish validating server code
+//TODO validate unit number
 func (ph *PropertyHandler) AddTenantToProperty() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		ph.log.Println("POST ADD TENANT")
@@ -50,8 +51,8 @@ func (ph *PropertyHandler) AddTenantToProperty() http.HandlerFunc {
 			data.ToJSON(&message{err}, rw)
 			return
 		}
-		usr := usrCtx.(*userInformation)
-		if usr.UserType != 1 {
+		usr := usrCtx.(*data.Tenant)
+		if usr.AccountType != 1 {
 			rw.WriteHeader(http.StatusForbidden)
 			data.ToJSON(&message{"admins can not be added to property"}, rw)
 			return
@@ -69,21 +70,31 @@ func (ph *PropertyHandler) AddTenantToProperty() http.HandlerFunc {
 			data.ToJSON(&message{"invalid request body"}, rw)
 			return
 		}
+		uValue, ok := rBody["unit_number"]
+		if !ok {
+			rw.WriteHeader(http.StatusBadRequest)
+			data.ToJSON(&message{"invalid request body"}, rw)
+			return
+		}
+		unitNumber, err := strconv.ParseUint(uValue, 10, 32)
+		if err != nil {
+			rw.WriteHeader(http.StatusBadRequest)
+			data.ToJSON(&message{"unable to process unit number"}, rw)
+			return
+		}
 		prop, err := ph.repo.GetPropertyByServerCode(rValue)
 		if err != nil {
 			rw.WriteHeader(http.StatusBadRequest)
 			data.ToJSON(&message{"no property found with that code"}, rw)
 			return
 		}
-		tenantInfo := &data.Tenant{
-			Username:   usr.Username,
-			Nickname:   usr.Username,
-			UnitNumber: 0,
-			ProfileURI: usr.ProfileUri,
-		}
-		if err := ph.repo.AddTenantToProperty(prop, tenantInfo); err != nil {
+		usr.UnitNumber = uint(unitNumber)
+		usr.Nickname = usr.Username
+
+		if err := ph.repo.AddTenantToProperty(prop, usr); err != nil {
+			ph.log.Println("[ERROR]error adding tenant to property", err)
 			rw.WriteHeader(http.StatusBadRequest)
-			data.ToJSON(&message{err}, rw)
+			data.ToJSON(&message{"Unable to add tenant to property"}, rw)
 			return
 		}
 		rw.WriteHeader(http.StatusNoContent)

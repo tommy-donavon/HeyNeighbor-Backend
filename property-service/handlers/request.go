@@ -20,7 +20,7 @@ type requestOptions struct {
 }
 
 // sends GET request to account service to get provided user's information
-func (ph *PropertyHandler) getUserInformation(r *http.Request) (*userInformation, error) {
+func (ph *PropertyHandler) getUserInformation(r *http.Request) (*data.Tenant, error) {
 	resp, err := sendNewRequest(&requestOptions{
 		serviceName: "account-service",
 		methodType:  "GET",
@@ -35,7 +35,7 @@ func (ph *PropertyHandler) getUserInformation(r *http.Request) (*userInformation
 		return nil, err
 	}
 	defer resp.Body.Close()
-	userInfo := &userInformation{}
+	userInfo := &data.Tenant{}
 	if err := data.FromJSON(&userInfo, resp.Body); err != nil {
 		return nil, err
 	}
