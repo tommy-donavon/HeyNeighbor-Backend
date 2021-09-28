@@ -11,6 +11,7 @@ import {
   deregisterService,
 } from './register/register.js';
 import { IProperty } from './model/property.js';
+import { ITenant } from './model/tenant.js';
 
 export class ChatServer {
   public static readonly PORT: number = 8080;
@@ -52,20 +53,26 @@ export class ChatServer {
       });
     });
 
-    //TODO finish
     const ns = this.io.of(/\/\w+/);
     ns.on('connection', async (socket: Socket) => {
       var room = url.parse(socket.handshake.url, true).query.room;
       var server_code = socket.nsp.name.replace(/[/]/g, '');
-      const user = await getUser(socket.request.headers.authorization);
-      if (user instanceof Error) socket.disconnect(true);
-      const prop = await getProperty(
-        server_code,
-        socket.request.headers.authorization as string,
-      );
-      if (prop instanceof Error) socket.disconnect(true);
-      var validChannel = (prop as IProperty).Channels.includes(room as string);
-      if (!validChannel) socket.disconnect(true);
+
+      try {
+        const user = await getUser(socket.request.headers.authorization);
+
+        const prop = await getProperty(
+          server_code,
+          socket.request.headers.authorization as string,
+        );
+        console.log(prop);
+        var validChannel = (prop as IProperty).Channels.includes(
+          room as string,
+        );
+        if (!validChannel) socket.disconnect(true);
+      } catch (err) {
+        socket.disconnect(true);
+      }
 
       socket.join(room as string);
       console.log(
@@ -73,7 +80,7 @@ export class ChatServer {
       );
       socket.on('msg', (msg) => {
         console.log(msg);
-        socket.broadcast.emit('msg', msg);
+        socket.broadcast.to(room as string).emit('msg', msg);
       });
 
       socket.on('disconnect', (reason: string) => console.log(reason));
