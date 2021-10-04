@@ -55,40 +55,44 @@ export class ChatServer {
 
     const ns = this.io.of(/\/\w+/);
     ns.on('connection', async (socket: Socket) => {
-      var room = url.parse(socket.handshake.url, true).query.room;
-      var server_code = socket.nsp.name.replace(/[/]/g, '');
-
       try {
+        var room = url.parse(socket.handshake.url, true).query.room;
+        var server_code = socket.nsp.name.replace(/[/]/g, '');
         const user = await getUser(socket.request.headers.authorization);
 
         const prop = await getProperty(
           server_code,
           socket.request.headers.authorization as string,
         );
-        console.log(prop);
-        var validChannel = (prop as IProperty).Channels.includes(
+        // console.log(prop as IProperty);
+        console.log(room as string)
+        console.log((prop as IProperty).channels)
+        var validChannel = (prop as IProperty).channels.includes(
           room as string,
         );
         if (!validChannel) socket.disconnect(true);
+        console.log(validChannel)
+        socket.join(room as string);
+        console.log(
+          `socket joined room ${room} in namespace ${socket.nsp.name.substr(
+            1,
+          )}`,
+        );
+        socket.on('msg', (msg) => {
+          console.log(msg);
+          socket.broadcast.to(room as string).emit('msg', msg);
+        });
+
+        socket.on('disconnect', (reason: string) => console.log(reason));
+        socket.on('error', (err: Error) => {
+          console.error(err);
+          socket.leave(room as string);
+          socket.disconnect(true);
+        });
       } catch (err) {
+        console.error(err);
         socket.disconnect(true);
       }
-
-      socket.join(room as string);
-      console.log(
-        `socket joined room ${room} in namespace ${socket.nsp.name.substr(1)}`,
-      );
-      socket.on('msg', (msg) => {
-        console.log(msg);
-        socket.broadcast.to(room as string).emit('msg', msg);
-      });
-
-      socket.on('disconnect', (reason: string) => console.log(reason));
-      socket.on('error', (err: Error) => {
-        console.error(err);
-        socket.leave(room as string);
-        socket.disconnect(true);
-      });
     });
   }
 

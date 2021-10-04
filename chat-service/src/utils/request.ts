@@ -11,9 +11,9 @@ export const getUser = async (authHeader: string | undefined): Promise<ITenant> 
             'Authorization': authHeader as string,
         }
     })
-    const user:ITenant = <ITenant> await response.json()
+    const user = await response.json()
     if (response.ok && user) {
-        return Promise.resolve(user)
+        return Promise.resolve(user as ITenant)
     }
     throw new Error('unable to retrieve user')
   } catch (err) {
@@ -30,9 +30,9 @@ export const getProperty = async (serverCode: string, authHeader:string): Promis
                 'Authorization': authHeader
             }
         })
-        const property:IProperty = await response.json() as IProperty
+        const property = await response.json()
         if(response.ok && property){
-            Promise.resolve(property)
+            return Promise.resolve(property as IProperty)
         }
         throw new Error('unable to retrieve property')
     }catch(err){

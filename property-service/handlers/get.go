@@ -90,7 +90,7 @@ func (ph *PropertyHandler) GetPropertyByServerCode() http.HandlerFunc {
 		prop, err := ph.repo.GetPropertyByServerCode(code)
 		if err != nil {
 			rw.WriteHeader(http.StatusBadRequest)
-			data.ToJSON(&message{err}, rw)
+			data.ToJSON(&message{"unable to find property"}, rw)
 			return
 		}
 		for _, t := range prop.Tenants {
