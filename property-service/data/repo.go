@@ -54,7 +54,7 @@ func NewPropertyRepo() *PropertyRepo {
 
 func (pr *PropertyRepo) GenerateServerCode(propName string) string {
 	b := make([]rune, 10)
-	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#%^&")
+	letters := []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]
 	}

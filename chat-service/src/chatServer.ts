@@ -64,14 +64,10 @@ export class ChatServer {
           server_code,
           socket.request.headers.authorization as string,
         );
-        // console.log(prop as IProperty);
-        console.log(room as string)
-        console.log((prop as IProperty).channels)
         var validChannel = (prop as IProperty).channels.includes(
           room as string,
         );
         if (!validChannel) socket.disconnect(true);
-        console.log(validChannel)
         socket.join(room as string);
         console.log(
           `socket joined room ${room} in namespace ${socket.nsp.name.substr(

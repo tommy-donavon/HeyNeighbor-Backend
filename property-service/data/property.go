@@ -21,6 +21,8 @@ type Property struct {
 	Channels        []string           `bson:"channels" json:"channels"`
 }
 
+//TODO add go routine to update user rent payments
+
 //Inserts property document into mongo database
 func (pr *PropertyRepo) CreateProperty(prop *Property) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Second)

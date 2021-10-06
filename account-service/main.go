@@ -19,7 +19,7 @@ import (
 func main() {
 
 	sm := mux.NewRouter()
-	logger := log.New(os.Stdout, "users-service", log.LstdFlags)
+	logger := log.New(os.Stdout, "account-service", log.LstdFlags)
 
 	consulClient := register.NewConsulClient("account-service")
 	consulClient.RegisterService() //register users-service to consul

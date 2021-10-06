@@ -27,4 +27,8 @@ func SetUpRoutes(sm *mux.Router, ph *handlers.PropertyHandler) {
 	getProperties.Handle("/code/{code}", ph.GetPropertyByServerCode())
 	getProperties.Handle("/tenant", ph.GetTenantProperties())
 	getProperties.Use(ph.AuthMiddleware)
+
+	patchRouter := sm.Methods(http.MethodPatch).Subrouter()
+	patchRouter.Handle("/tenant", ph.UpdateTenantInformation())
+	patchRouter.Use(ph.AuthMiddleware)
 }

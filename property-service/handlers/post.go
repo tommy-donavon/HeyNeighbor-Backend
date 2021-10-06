@@ -41,7 +41,6 @@ func (ph *PropertyHandler) CreateProperty() http.HandlerFunc {
 	}
 }
 
-//TODO validate unit number
 func (ph *PropertyHandler) AddTenantToProperty() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		ph.log.Println("POST ADD TENANT")
@@ -64,7 +63,7 @@ func (ph *PropertyHandler) AddTenantToProperty() http.HandlerFunc {
 			data.ToJSON(&message{"unable to process request"}, rw)
 			return
 		}
-		rValue, ok := rBody["server_code"]
+		sValue, ok := rBody["server_code"]
 		if !ok {
 			rw.WriteHeader(http.StatusBadRequest)
 			data.ToJSON(&message{"invalid request body"}, rw)
@@ -82,7 +81,20 @@ func (ph *PropertyHandler) AddTenantToProperty() http.HandlerFunc {
 			data.ToJSON(&message{"unable to process unit number"}, rw)
 			return
 		}
-		prop, err := ph.repo.GetPropertyByServerCode(rValue)
+		rValue, ok := rBody["rent_amount"]
+		if !ok {
+			rw.WriteHeader(http.StatusBadRequest)
+			data.ToJSON(&message{"invalid request body"}, rw)
+			return
+		}
+		// rentValue, err := strconv.ParseUint(rValue, 10, 32)
+		rentValue, err := strconv.ParseFloat(rValue, 32)
+		if err != nil {
+			rw.WriteHeader(http.StatusBadRequest)
+			data.ToJSON(&message{"unable to process rent amount"}, rw)
+			return
+		}
+		prop, err := ph.repo.GetPropertyByServerCode(sValue)
 		if err != nil {
 			rw.WriteHeader(http.StatusBadRequest)
 			data.ToJSON(&message{"no property found with that code"}, rw)
@@ -90,6 +102,7 @@ func (ph *PropertyHandler) AddTenantToProperty() http.HandlerFunc {
 		}
 		usr.UnitNumber = uint(unitNumber)
 		usr.Nickname = usr.Username
+		usr.Rent.AmountDue = rentValue
 
 		if err := ph.repo.AddTenantToProperty(prop, usr); err != nil {
 			ph.log.Println("[ERROR]error adding tenant to property", err)
