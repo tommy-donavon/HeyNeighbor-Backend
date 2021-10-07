@@ -5,7 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/yhung-mea7/HeyNeighbor/account-service/data"
+	models "github.com/yhung-mea7/HeyNeighbor/account-service/data"
+	"github.com/yhung-mea7/go-rest-kit/data"
 )
 
 type login struct {
@@ -22,7 +23,7 @@ func (uh *UserHandler) GlobalContentTypeMiddleware(next http.Handler) http.Handl
 
 func (uh *UserHandler) ValidateUserMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		user := data.User{}
+		user := models.User{}
 		if err := data.FromJSON(&user, r.Body); err != nil {
 			uh.log.Println(err)
 			rw.WriteHeader(http.StatusBadRequest)

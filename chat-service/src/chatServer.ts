@@ -11,7 +11,6 @@ import {
   deregisterService,
 } from './register/register.js';
 import { IProperty } from './model/property.js';
-import { ITenant } from './model/tenant.js';
 
 export class ChatServer {
   public static readonly PORT: number = 8080;

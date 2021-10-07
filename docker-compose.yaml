@@ -18,9 +18,9 @@ services:
       - nginx-data
     ports:
       - 8080:80
-  account-db:
+  postgresdb:
     image: postgres:latest
-    container_name: account-db
+    container_name: postgresdb
     restart: unless-stopped
     environment:
       - POSTGRES_USER=postgres
@@ -28,10 +28,11 @@ services:
       - APP_DB_USER=admin
       - APP_DB_PASS=${POSTGRES_PASSWORD}
       - APP_DB_NAME=users
+      - APP_TWO_DB_NAME=maintenance
     ports:
       - "5438:5432"
     volumes:
-      - ./account-db/config:/docker-entrypoint-initdb.d/
+      - ./postgres/config:/docker-entrypoint-initdb.d/
   account-service:
     image: meaty/accountapi
     build:
@@ -39,24 +40,37 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      - DSN=host=account-db user=admin password=${POSTGRES_PASSWORD} dbname=users port=5432 sslmode=disable
+      - DSN=host=postgresdb user=admin password=${POSTGRES_PASSWORD} dbname=users port=5432 sslmode=disable
       - PORT=:8080
       - CONSUL_HTTP_ADDR=consul:8500
       - SECRET_KEY=${SECRET_KEY}
     depends_on:
-      - account-db
-  property-db:
-    image: "mongo:latest"
-    container_name: "property-db"
+      - postgresdb
+  maintenance-service:
+    image: meaty/maintenanceapi
+    build:
+      context: ./maintenance-service
+      dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      - MONGO_INITDB_DATABASE=property-db
+      - DSN=host=postgresdb user=admin password=${POSTGRES_PASSWORD} dbname=maintenance port=5432 sslmode=disable
+      - PORT=:8080
+      - CONSUL_HTTP_ADDR=consul:8500
+      - SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      - postgresdb
+  mongodb:
+    image: "mongo:latest"
+    container_name: "mongodb"
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=root-db
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=pass
     ports:
       - "27017-27019:27017-27019"
     volumes:
-      - ./property-db/init.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./mongodb/prop.init.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
   property-service:
     image: meaty/propertyapi
     build:
@@ -65,13 +79,13 @@ services:
     restart: unless-stopped
     environment:
       - PORT=:8080
-      - MONGO_URI=mongodb://admin:pass@property-db:27017/property-db
+      - MONGO_URI=mongodb://admin:pass@mongodb:27017/property-db
       - MONGO_DB=property-db
       - CONSUL_HTTP_ADDR=consul:8500
     ports:
       - 8080
     depends_on:
-      - "property-db"
+      - "mongodb"
       - "consul"
   chat-service:
     image: meaty/chatapi

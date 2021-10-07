@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/yhung-mea7/HeyNeighbor/account-service/data"
-	// request "github.com/yhung-mea7/HeyNeighbor/account-service/utils"
+	models "github.com/yhung-mea7/HeyNeighbor/account-service/data"
+	"github.com/yhung-mea7/go-rest-kit/data"
 )
 
 func (uh *UserHandler) UpdateUser() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		userInformation := r.Context().Value(ak).(*data.User)
+		userInformation := r.Context().Value(ak).(*models.User)
 		requestBody := map[string]string{}
 		if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
 

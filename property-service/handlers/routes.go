@@ -1,13 +1,12 @@
-package routes
+package handlers
 
 import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/yhung-mea7/HeyNeighbor/property-service/handlers"
 )
 
-func SetUpRoutes(sm *mux.Router, ph *handlers.PropertyHandler) {
+func SetUpRoutes(sm *mux.Router, ph *PropertyHandler) {
 	sm.Use(ph.GlobalContentTypeMiddleware)
 
 	getRouter := sm.Methods(http.MethodGet).Subrouter()

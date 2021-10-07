@@ -3,7 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/yhung-mea7/HeyNeighbor/account-service/data"
+	models "github.com/yhung-mea7/HeyNeighbor/account-service/data"
+	"github.com/yhung-mea7/go-rest-kit/data"
 )
 
 func (uh *UserHandler) LoginUser() http.HandlerFunc {
@@ -21,7 +22,7 @@ func (uh *UserHandler) LoginUser() http.HandlerFunc {
 			data.ToJSON(&message{"Invalid Login information"}, rw)
 			return
 		}
-		if err := data.CheckPassword(user.Password, login.Password); err != nil {
+		if err := models.CheckPassword(user.Password, login.Password); err != nil {
 			rw.WriteHeader(http.StatusUnauthorized)
 			data.ToJSON(&message{"Invalid Login information"}, rw)
 			return
@@ -44,7 +45,7 @@ func (uh *UserHandler) LoginUser() http.HandlerFunc {
 func (uh *UserHandler) CreateUser() http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
 		uh.log.Println("POST CREATE ADMIN USER")
-		user, ok := r.Context().Value(uk).(data.User)
+		user, ok := r.Context().Value(uk).(models.User)
 		if !ok {
 			rw.WriteHeader(http.StatusInternalServerError)
 			data.ToJSON(&message{"unable to process login information"}, rw)
