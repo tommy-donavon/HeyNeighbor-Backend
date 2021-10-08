@@ -13,7 +13,7 @@ type (
 	userInformation struct {
 		Username    string `json:"username" validate:"required"`
 		AccountType uint   `json:"account_type" validate:"required"`
-		UnitNumber  uint   `json:"unit_number" validate:"required"`
+		UnitNumber  uint   `json:"unit_number"`
 	}
 
 	propInformation struct {
@@ -41,9 +41,14 @@ func authMiddleware(next http.Handler) http.Handler {
 				"Authorization": r.Header.Get("Authorization"),
 			},
 		}))
-		if err != nil || resp.StatusCode != http.StatusOK {
+		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			data.ToJSON(&message{"unable to reach account service"}, rw)
+			return
+		}
+		if resp.StatusCode != http.StatusOK {
+			rw.WriteHeader(http.StatusUnauthorized)
+			data.ToJSON(&message{"you are not authroized to make this request"}, rw)
 			return
 		}
 		defer resp.Body.Close()

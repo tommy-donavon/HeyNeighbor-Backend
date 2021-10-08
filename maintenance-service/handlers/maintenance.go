@@ -34,9 +34,8 @@ func NewMaintenanceHandler(log *log.Logger, reg *consul_register.ConsulClient) *
 		lock.Lock()
 		defer lock.Unlock()
 		if myMainHandler == nil {
-
 			validator := my_json.NewValidator()
-			return &maintenanceHandler{
+			myMainHandler = &maintenanceHandler{
 				log:       log,
 				validator: validator,
 				register:  reg,

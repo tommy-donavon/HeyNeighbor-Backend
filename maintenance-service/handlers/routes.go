@@ -7,8 +7,7 @@ import (
 	"github.com/yhung-mea7/HeyNeighbor/maintenance-service/data"
 )
 
-func (mh *maintenanceHandler) SetupHandler(sm *mux.Router) {
-	repo := data.NewMaintenanceRepo()
+func (mh *maintenanceHandler) SetupHandler(sm *mux.Router, repo *data.MaintenanceRepo) {
 	sm.Handle("/healthcheck", healthcheck()).Methods(http.MethodGet)
 	sm.Use(globalContentTypeMiddleware)
 
@@ -17,7 +16,7 @@ func (mh *maintenanceHandler) SetupHandler(sm *mux.Router) {
 	getRouter.Use(authMiddleware)
 
 	postRouter := sm.Methods(http.MethodPost).Subrouter()
-	postRouter.Handle("/", createMaintenanceRequest(repo))
+	postRouter.Handle("/{code:[A-z0-9-]+}", createMaintenanceRequest(repo))
 	postRouter.Use(authMiddleware)
 	postRouter.Use(validateMaintenanceRequestMiddleware)
 
