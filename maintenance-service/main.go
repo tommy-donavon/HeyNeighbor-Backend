@@ -20,8 +20,9 @@ func main() {
 	consulClient := consul_register.NewConsulClient("maintenance-service")
 	consulClient.RegisterService()
 	defer consulClient.DeregisterService()
-	mh := handlers.NewMaintenanceHandler(logger)
-	handlers.SetupRoutes(sm, mh)
+
+	mh := handlers.NewMaintenanceHandler(logger, consulClient)
+	mh.SetupHandler(sm)
 	server := http.Server{
 		Addr:         os.Getenv("PORT"),
 		Handler:      sm,
