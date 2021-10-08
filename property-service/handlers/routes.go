@@ -4,30 +4,31 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/yhung-mea7/HeyNeighbor/property-service/data"
 )
 
-func SetUpRoutes(sm *mux.Router, ph *PropertyHandler) {
-	sm.Use(ph.GlobalContentTypeMiddleware)
+func (ph *propertyHandler) SetUpRoutes(sm *mux.Router, repo *data.PropertyRepo) {
+	sm.Use(globalContentTypeMiddleware)
 
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
-	getRouter.Handle("/healthcheck", ph.HealthCheck())
+	getRouter.Handle("/healthcheck", healthcheck())
 
 	createPropertyRouter := sm.Methods(http.MethodPost).Subrouter()
-	createPropertyRouter.Handle("/", ph.CreateProperty())
-	createPropertyRouter.Use(ph.AuthMiddleware)
-	createPropertyRouter.Use(ph.ValidatePropertyMiddleware)
+	createPropertyRouter.Handle("/", createProperty(repo))
+	createPropertyRouter.Use(authMiddleware)
+	createPropertyRouter.Use(validatePropertyMiddleware)
 
 	postRouter := sm.Methods(http.MethodPost).Subrouter()
-	postRouter.Handle("/tenant", ph.AddTenantToProperty())
-	postRouter.Use(ph.AuthMiddleware)
+	postRouter.Handle("/tenant", addTenantToProperty(repo))
+	postRouter.Use(authMiddleware)
 
 	getProperties := sm.Methods(http.MethodGet).Subrouter()
-	getProperties.Handle("/admin", ph.GetManagerProperties())
-	getProperties.Handle("/code/{code}", ph.GetPropertyByServerCode())
-	getProperties.Handle("/tenant", ph.GetTenantProperties())
-	getProperties.Use(ph.AuthMiddleware)
+	getProperties.Handle("/admin", getManagerProperties(repo))
+	getProperties.Handle("/code/{code}", getPropertyByServerCode(repo))
+	getProperties.Handle("/tenant", getTenantProperties(repo))
+	getProperties.Use(authMiddleware)
 
 	patchRouter := sm.Methods(http.MethodPatch).Subrouter()
-	patchRouter.Handle("/tenant", ph.UpdateTenantInformation())
-	patchRouter.Use(ph.AuthMiddleware)
+	patchRouter.Handle("/tenant", updateTenantInformation(repo))
+	patchRouter.Use(authMiddleware)
 }

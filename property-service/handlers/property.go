@@ -3,9 +3,9 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"sync"
 
 	"github.com/gorilla/mux"
-	"github.com/yhung-mea7/HeyNeighbor/property-service/data"
 
 	"github.com/yhung-mea7/go-rest-kit/context"
 	my_json "github.com/yhung-mea7/go-rest-kit/data"
@@ -13,8 +13,7 @@ import (
 )
 
 type (
-	PropertyHandler struct {
-		repo       *data.PropertyRepo
+	propertyHandler struct {
 		log        *log.Logger
 		validator  *my_json.Validation
 		register   *consul_register.ConsulClient
@@ -26,23 +25,31 @@ type (
 	}
 )
 
+var lock = &sync.Mutex{}
+var instance *propertyHandler
+
 //Creates new PropertyHandler.
-func NewPropertyHandler(log *log.Logger, register *consul_register.ConsulClient) *PropertyHandler {
-	repo := data.NewPropertyRepo()
-	validator := my_json.NewValidator(
-		my_json.ValidationOption{
-			Name:      "zip",
-			Operation: my_json.NewValidatorFunc(`^\d{5}(-\d{4})?$`),
-		},
-	)
-	ph := &PropertyHandler{
-		repo:      repo,
-		log:       log,
-		validator: validator,
-		register:  register,
+func NewPropertyHandler(log *log.Logger, register *consul_register.ConsulClient) *propertyHandler {
+	if instance == nil {
+		lock.Lock()
+		defer lock.Unlock()
+		if instance == nil {
+			validator := my_json.NewValidator(
+				my_json.ValidationOption{
+					Name:      "zip",
+					Operation: my_json.NewValidatorFunc(`^\d{5}(-\d{4})?$`),
+				},
+			)
+			instance = &propertyHandler{
+				log:        log,
+				validator:  validator,
+				register:   register,
+				ctxHandler: &context.ContextHandler{},
+			}
+
+		}
 	}
-	ph.ctxHandler = &context.ContextHandler{}
-	return ph
+	return instance
 }
 
 func getServerCode(r *http.Request) string {

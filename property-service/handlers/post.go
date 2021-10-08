@@ -8,16 +8,16 @@ import (
 	json "github.com/yhung-mea7/go-rest-kit/data"
 )
 
-func (ph *PropertyHandler) CreateProperty() http.HandlerFunc {
+func createProperty(repo data.IPropertyCreate) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		ph.log.Println("POST Create Property")
-		propCtx, err := ph.ctxHandler.Get(r.Context(), "propertyInfo")
+		instance.log.Println("POST Create Property")
+		propCtx, err := instance.ctxHandler.Get(r.Context(), "propertyInfo")
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			json.ToJSON(&message{err}, rw)
 			return
 		}
-		usrCtx, err := ph.ctxHandler.Get(r.Context(), "loginInfo")
+		usrCtx, err := instance.ctxHandler.Get(r.Context(), "loginInfo")
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			json.ToJSON(&message{err}, rw)
@@ -31,9 +31,8 @@ func (ph *PropertyHandler) CreateProperty() http.HandlerFunc {
 			return
 		}
 		prop.PropertyManager = usr.Username
-		prop.ServerCode = ph.repo.GenerateServerCode(prop.PropertyName)
-		if err := ph.repo.CreateProperty(&prop); err != nil {
-			ph.log.Println("[ERROR] Unable to create property", err)
+		if err := repo.CreateProperty(&prop); err != nil {
+			instance.log.Println("[ERROR] Unable to create property", err)
 			rw.WriteHeader(http.StatusInternalServerError)
 			json.ToJSON(&message{"unable to create property"}, rw)
 			return
@@ -42,10 +41,10 @@ func (ph *PropertyHandler) CreateProperty() http.HandlerFunc {
 	}
 }
 
-func (ph *PropertyHandler) AddTenantToProperty() http.HandlerFunc {
+func addTenantToProperty(repo data.IPropertyCreate) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		ph.log.Println("POST ADD TENANT")
-		usrCtx, err := ph.ctxHandler.Get(r.Context(), "loginInfo")
+		instance.log.Println("POST ADD TENANT")
+		usrCtx, err := instance.ctxHandler.Get(r.Context(), "loginInfo")
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			json.ToJSON(&message{err}, rw)
@@ -59,7 +58,7 @@ func (ph *PropertyHandler) AddTenantToProperty() http.HandlerFunc {
 		}
 		rBody := map[string]string{}
 		if err := json.FromJSON(&rBody, r.Body); err != nil {
-			ph.log.Println("[ERROR] error deseralizing request body", err)
+			instance.log.Println("[ERROR] error deseralizing request body", err)
 			rw.WriteHeader(http.StatusInternalServerError)
 			json.ToJSON(&message{"unable to process request"}, rw)
 			return
@@ -88,25 +87,17 @@ func (ph *PropertyHandler) AddTenantToProperty() http.HandlerFunc {
 			json.ToJSON(&message{"invalid request body"}, rw)
 			return
 		}
-		// rentValue, err := strconv.ParseUint(rValue, 10, 32)
 		rentValue, err := strconv.ParseFloat(rValue, 32)
 		if err != nil {
 			rw.WriteHeader(http.StatusBadRequest)
 			json.ToJSON(&message{"unable to process rent amount"}, rw)
 			return
 		}
-		prop, err := ph.repo.GetPropertyByServerCode(sValue)
-		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
-			json.ToJSON(&message{"no property found with that code"}, rw)
-			return
-		}
 		usr.UnitNumber = uint(unitNumber)
 		usr.Nickname = usr.Username
 		usr.Rent.AmountDue = rentValue
-
-		if err := ph.repo.AddTenantToProperty(prop, usr); err != nil {
-			ph.log.Println("[ERROR]error adding tenant to property", err)
+		if err := repo.AddTenantToProperty(sValue, usr); err != nil {
+			instance.log.Println("[ERROR]error adding tenant to property", err)
 			rw.WriteHeader(http.StatusBadRequest)
 			json.ToJSON(&message{"Unable to add tenant to property"}, rw)
 			return

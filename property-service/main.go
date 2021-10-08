@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/yhung-mea7/HeyNeighbor/property-service/data"
 	"github.com/yhung-mea7/HeyNeighbor/property-service/handlers"
 
 	consul_register "github.com/yhung-mea7/go-rest-kit/register"
@@ -21,13 +22,12 @@ func main() {
 	consulClient := consul_register.NewConsulClient("property-service")
 	consulClient.RegisterService()
 	defer consulClient.DeregisterService()
-
+	repo := data.NewPropertyRepo()
 	ph := handlers.NewPropertyHandler(
 		logger,
 		consulClient,
 	)
-	handlers.SetUpRoutes(sm, ph)
-
+	ph.SetUpRoutes(sm, repo)
 	server := http.Server{
 		Addr:         os.Getenv("PORT"),
 		Handler:      sm,
