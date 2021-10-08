@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	my_json "github.com/yhung-mea7/go-rest-kit/data"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -104,10 +105,6 @@ func (pr *PropertyRepo) UpdateProperty(server_code string, updateInfo map[string
 				if !ok {
 					return fmt.Errorf("error asserting value to address")
 				}
-				err = NewValidator().Validate(v)
-				if err != nil {
-					return err
-				}
 				prop.PropertyAddress = &v
 			case "property_manager":
 				v, ok := value.(string)
@@ -124,8 +121,10 @@ func (pr *PropertyRepo) UpdateProperty(server_code string, updateInfo map[string
 			}
 		}
 	}
-	err = NewValidator().Validate(prop)
-	if err != nil {
+	if err := my_json.NewValidator(my_json.ValidationOption{
+		Name:      "zip",
+		Operation: my_json.NewValidatorFunc(`^\d{5}(-\d{4})?$`),
+	}).Validate(prop); err != nil {
 		return err
 	}
 

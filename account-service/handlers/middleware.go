@@ -30,7 +30,7 @@ func (uh *UserHandler) ValidateUserMiddleware(next http.Handler) http.Handler {
 			data.ToJSON(&message{err.Error()}, rw)
 			return
 		}
-		if err := user.Validate(); err != nil {
+		if err := uh.validator.Validate(user); err != nil {
 			uh.log.Println(err)
 			rw.WriteHeader(http.StatusBadRequest)
 			data.ToJSON(&message{err.Error()}, rw)

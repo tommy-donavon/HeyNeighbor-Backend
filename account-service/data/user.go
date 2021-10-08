@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+
+	my_json "github.com/yhung-mea7/go-rest-kit/data"
 )
 
 type (
@@ -100,7 +102,10 @@ func (ur *UserRepo) UpdateUser(username string, updateInfo map[string]string) er
 
 	}
 
-	if err := user.Validate(); err != nil {
+	if err := my_json.NewValidator(my_json.ValidationOption{
+		Name:      "phone",
+		Operation: my_json.NewValidatorFunc(`^(\d{1,2}-)?(\d{3}-){2}\d{4}$`),
+	}).Validate(user); err != nil {
 		return err
 	}
 	return ur.db.Save(&user).Error

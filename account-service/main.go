@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/yhung-mea7/HeyNeighbor/account-service/data"
 	"github.com/yhung-mea7/HeyNeighbor/account-service/handlers"
 	consul_register "github.com/yhung-mea7/go-rest-kit/register"
 )
@@ -24,7 +23,7 @@ func main() {
 	consulClient.RegisterService() //register users-service to consul
 	defer consulClient.DeregisterService()
 
-	uh := handlers.NewUserHandler(data.NewUserRepo(), logger, os.Getenv("SECRET_KEY"))
+	uh := handlers.NewUserHandler(logger)
 	handlers.SetUpRoutes(sm, uh)
 
 	server := http.Server{

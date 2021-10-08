@@ -2,16 +2,19 @@ package handlers
 
 import (
 	"log"
+	"os"
 
 	"github.com/yhung-mea7/HeyNeighbor/account-service/auth"
 	"github.com/yhung-mea7/HeyNeighbor/account-service/data"
+	my_json "github.com/yhung-mea7/go-rest-kit/data"
 )
 
 type (
 	UserHandler struct {
-		repo *data.UserRepo
-		log  *log.Logger
-		jwt  *auth.JwtWrapper
+		repo      *data.UserRepo
+		log       *log.Logger
+		jwt       *auth.JwtWrapper
+		validator *my_json.Validation
 	}
 	message struct {
 		Message interface{} `json:"message"`
@@ -26,15 +29,23 @@ const (
 	ak contextKey = "adminKey"
 )
 
-func NewUserHandler(repo *data.UserRepo, log *log.Logger, key string) *UserHandler {
+func NewUserHandler(log *log.Logger) *UserHandler {
+	repo := data.NewUserRepo()
+	validator := my_json.NewValidator(
+		my_json.ValidationOption{
+			Name:      "phone",
+			Operation: my_json.NewValidatorFunc(`^(\d{1,2}-)?(\d{3}-){2}\d{4}$`),
+		},
+	)
 	return &UserHandler{
 		repo: repo,
 		log:  log,
 		jwt: &auth.JwtWrapper{
-			SecretKey:       key,
+			SecretKey:       os.Getenv("SECRET_KEY"),
 			Issuer:          "account-service",
 			ExpirationHours: 24,
 		},
+		validator: validator,
 	}
 }
 

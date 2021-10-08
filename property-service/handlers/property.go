@@ -8,6 +8,7 @@ import (
 	"github.com/yhung-mea7/HeyNeighbor/property-service/data"
 
 	"github.com/yhung-mea7/go-rest-kit/context"
+	my_json "github.com/yhung-mea7/go-rest-kit/data"
 	consul_register "github.com/yhung-mea7/go-rest-kit/register"
 )
 
@@ -15,7 +16,7 @@ type (
 	PropertyHandler struct {
 		repo       *data.PropertyRepo
 		log        *log.Logger
-		validator  *data.Validation
+		validator  *my_json.Validation
 		register   *consul_register.ConsulClient
 		ctxHandler *context.ContextHandler
 	}
@@ -26,11 +27,18 @@ type (
 )
 
 //Creates new PropertyHandler.
-func NewPropertyHandler(repo *data.PropertyRepo, log *log.Logger, v *data.Validation, register *consul_register.ConsulClient) *PropertyHandler {
+func NewPropertyHandler(log *log.Logger, register *consul_register.ConsulClient) *PropertyHandler {
+	repo := data.NewPropertyRepo()
+	validator := my_json.NewValidator(
+		my_json.ValidationOption{
+			Name:      "zip",
+			Operation: my_json.NewValidatorFunc(`^\d{5}(-\d{4})?$`),
+		},
+	)
 	ph := &PropertyHandler{
 		repo:      repo,
 		log:       log,
-		validator: v,
+		validator: validator,
 		register:  register,
 	}
 	ph.ctxHandler = &context.ContextHandler{}
