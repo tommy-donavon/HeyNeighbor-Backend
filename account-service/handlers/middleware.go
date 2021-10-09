@@ -14,24 +14,24 @@ type login struct {
 	Password string `json:"password"`
 }
 
-func (uh *UserHandler) GlobalContentTypeMiddleware(next http.Handler) http.Handler {
+func globalContentTypeMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Set("Content-type", "application/json")
 		next.ServeHTTP(rw, r)
 	})
 }
 
-func (uh *UserHandler) ValidateUserMiddleware(next http.Handler) http.Handler {
+func validateUserMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		user := models.User{}
 		if err := data.FromJSON(&user, r.Body); err != nil {
-			uh.log.Println(err)
+			usrHandler.log.Println(err)
 			rw.WriteHeader(http.StatusBadRequest)
 			data.ToJSON(&message{err.Error()}, rw)
 			return
 		}
-		if err := uh.validator.Validate(user); err != nil {
-			uh.log.Println(err)
+		if err := usrHandler.validator.Validate(user); err != nil {
+			usrHandler.log.Println(err)
 			rw.WriteHeader(http.StatusBadRequest)
 			data.ToJSON(&message{err.Error()}, rw)
 			return
@@ -43,11 +43,11 @@ func (uh *UserHandler) ValidateUserMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func (uh *UserHandler) ValidateLoginInformation(next http.Handler) http.Handler {
+func validateLoginInformation(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		login := login{}
 		if err := data.FromJSON(&login, r.Body); err != nil {
-			uh.log.Println("[ERROR] deserializing login", err)
+			usrHandler.log.Println("[ERROR] deserializing login", err)
 			rw.WriteHeader(http.StatusBadRequest)
 			data.ToJSON(&message{err.Error()}, rw)
 			return
@@ -58,7 +58,7 @@ func (uh *UserHandler) ValidateLoginInformation(next http.Handler) http.Handler 
 	})
 }
 
-func (uh *UserHandler) Auth(next http.Handler) http.Handler {
+func authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("Authorization")
 		if token == "" {
@@ -74,13 +74,13 @@ func (uh *UserHandler) Auth(next http.Handler) http.Handler {
 			data.ToJSON(&message{"Malformed Token"}, rw)
 			return
 		}
-		claims, err := uh.jwt.CheckToken(token)
+		claims, err := usrHandler.jwt.CheckToken(token)
 		if err != nil {
 			rw.WriteHeader(http.StatusUnauthorized)
 			data.ToJSON(&message{"Unauthorized"}, rw)
 			return
 		}
-		client, err := uh.repo.GetUser(claims.Username)
+		client, err := usrHandler.repo.GetUser(claims.Username)
 		if err != nil {
 			rw.WriteHeader(http.StatusInternalServerError)
 			data.ToJSON(&message{"can not find provied user"}, rw)

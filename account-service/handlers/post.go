@@ -7,16 +7,16 @@ import (
 	"github.com/yhung-mea7/go-rest-kit/data"
 )
 
-func (uh *UserHandler) LoginUser() http.HandlerFunc {
+func loginUser(repo models.IUserRead) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		uh.log.Println("POST LOGIN")
+		usrHandler.log.Println("POST LOGIN")
 		login, ok := r.Context().Value(lk).(login)
 		if !ok {
 			rw.WriteHeader(http.StatusInternalServerError)
 			data.ToJSON(&message{"unable to process login information"}, rw)
 			return
 		}
-		user, err := uh.repo.GetUser(login.Username)
+		user, err := repo.GetUser(login.Username)
 		if err != nil {
 			rw.WriteHeader(http.StatusUnauthorized)
 			data.ToJSON(&message{"Invalid Login information"}, rw)
@@ -28,9 +28,9 @@ func (uh *UserHandler) LoginUser() http.HandlerFunc {
 			return
 
 		}
-		token, err := uh.jwt.CreateJwToken(user.Username, int(user.AccountType))
+		token, err := usrHandler.jwt.CreateJwToken(user.Username, int(user.AccountType))
 		if err != nil {
-			uh.log.Println(err.Error())
+			usrHandler.log.Println(err.Error())
 			rw.WriteHeader(http.StatusInternalServerError)
 			data.ToJSON(&message{"Failed to sign token"}, rw)
 			return
@@ -42,18 +42,18 @@ func (uh *UserHandler) LoginUser() http.HandlerFunc {
 	}
 }
 
-func (uh *UserHandler) CreateUser() http.HandlerFunc {
+func createUser(repo models.IUserCreate) http.HandlerFunc {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		uh.log.Println("POST CREATE ADMIN USER")
+		usrHandler.log.Println("POST CREATE ADMIN USER")
 		user, ok := r.Context().Value(uk).(models.User)
 		if !ok {
 			rw.WriteHeader(http.StatusInternalServerError)
 			data.ToJSON(&message{"unable to process login information"}, rw)
 			return
 		}
-		if err := uh.repo.CreateUser(&user); err != nil {
+		if err := repo.CreateUser(&user); err != nil {
 			rw.WriteHeader(http.StatusBadRequest)
-			uh.log.Println(err)
+			usrHandler.log.Println(err)
 			data.ToJSON(&message{err.Error()}, rw)
 			return
 		}

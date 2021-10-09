@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"os"
+	"sync"
 
 	"github.com/yhung-mea7/HeyNeighbor/account-service/auth"
 	"github.com/yhung-mea7/HeyNeighbor/account-service/data"
@@ -10,7 +11,7 @@ import (
 )
 
 type (
-	UserHandler struct {
+	userHandler struct {
 		repo      *data.UserRepo
 		log       *log.Logger
 		jwt       *auth.JwtWrapper
@@ -29,31 +30,34 @@ const (
 	ak contextKey = "adminKey"
 )
 
-func NewUserHandler(log *log.Logger) *UserHandler {
-	repo := data.NewUserRepo()
-	validator := my_json.NewValidator(
-		my_json.ValidationOption{
-			Name:      "phone",
-			Operation: my_json.NewValidatorFunc(`^(\d{1,2}-)?(\d{3}-){2}\d{4}$`),
-		},
-	)
-	return &UserHandler{
-		repo: repo,
-		log:  log,
-		jwt: &auth.JwtWrapper{
-			SecretKey:       os.Getenv("SECRET_KEY"),
-			Issuer:          "account-service",
-			ExpirationHours: 24,
-		},
-		validator: validator,
-	}
-}
+var (
+	lock       = &sync.Mutex{}
+	usrHandler *userHandler
+)
 
-// func getUserName(r *http.Request) uint {
-// 	vars := mux.Vars(r)
-// 	id, err := strconv.Atoi(vars["username"])
-// 	if err != nil {
-// 		return 0
-// 	}
-// 	return uint(id)
-// }
+func NewUserHandler(log *log.Logger) *userHandler {
+	if usrHandler == nil {
+		lock.Lock()
+		defer lock.Unlock()
+		if usrHandler == nil {
+			repo := data.NewUserRepo()
+			validator := my_json.NewValidator(
+				my_json.ValidationOption{
+					Name:      "phone",
+					Operation: my_json.NewValidatorFunc(`^(\d{1,2}-)?(\d{3}-){2}\d{4}$`),
+				},
+			)
+			usrHandler = &userHandler{
+				repo: repo,
+				log:  log,
+				jwt: &auth.JwtWrapper{
+					SecretKey:       os.Getenv("SECRET_KEY"),
+					Issuer:          "account-service",
+					ExpirationHours: 24,
+				},
+				validator: validator,
+			}
+		}
+	}
+	return usrHandler
+}

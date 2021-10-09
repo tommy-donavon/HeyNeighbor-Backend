@@ -4,31 +4,32 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/yhung-mea7/HeyNeighbor/account-service/data"
 )
 
-func SetUpRoutes(sm *mux.Router, userHandler *UserHandler) {
-	sm.Use(userHandler.GlobalContentTypeMiddleware)
+func (uh *userHandler) SetUpRoutes(sm *mux.Router, repo *data.UserRepo) {
+	sm.Use(globalContentTypeMiddleware)
 
 	//get routers
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
-	getRouter.Handle("/healthcheck", userHandler.HealthCheck())
+	getRouter.Handle("/healthcheck", healthCheck())
 
 	authGet := sm.Methods(http.MethodGet).Subrouter()
-	authGet.Handle("/", userHandler.GetLoggedInUser())
-	authGet.Use(userHandler.Auth)
+	authGet.Handle("/", getLoggedInUser(repo))
+	authGet.Use(authMiddleware)
 
 	//post routers
 	createAdminAccountRouter := sm.Methods(http.MethodPost).Subrouter()
-	createAdminAccountRouter.Handle("/create-user", userHandler.CreateUser())
-	createAdminAccountRouter.Use(userHandler.ValidateUserMiddleware)
+	createAdminAccountRouter.Handle("/create-user", createUser(repo))
+	createAdminAccountRouter.Use(validateUserMiddleware)
 
 	logInAccountRouter := sm.Methods(http.MethodPost).Subrouter()
-	logInAccountRouter.Handle("/", userHandler.LoginUser())
-	logInAccountRouter.Use(userHandler.ValidateLoginInformation)
+	logInAccountRouter.Handle("/", loginUser(repo))
+	logInAccountRouter.Use(validateLoginInformation)
 
 	//patch routers
 	authPatch := sm.Methods(http.MethodPatch).Subrouter()
-	authPatch.Handle("/", userHandler.UpdateUser())
-	authPatch.Use(userHandler.Auth)
+	authPatch.Handle("/", updateUser(repo))
+	authPatch.Use(authMiddleware)
 
 }
