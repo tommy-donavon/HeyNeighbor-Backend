@@ -98,6 +98,7 @@ services:
       - REDIS_HOST=chat-redis-store
       - REDIS_PORT=6379
       - CONSUL_HTTP_ADDR=consul:8500
+      - MONGO_URI=mongodb://admin:pass@mongodb:27017/property-db
     ports:
       - 8080
     depends_on:

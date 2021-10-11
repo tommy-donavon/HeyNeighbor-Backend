@@ -1,5 +1,5 @@
 import { lookupService } from '../register/register.js';
-import { ITenant, IProperty } from '../model';
+import { ITenant, IProperty } from '../models';
 import fetch from "node-fetch"
 
 export const getUser = async (authHeader: string | undefined): Promise<ITenant> => {
