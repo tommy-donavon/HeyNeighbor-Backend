@@ -1,5 +1,3 @@
-
-export {ITenant} from "./tenant";
-export {IProperty} from "./property";
-export {SocketServer} from "./socketServer"
-export {Chat,IChat, newRooms} from "./chat"
+export { ITenant } from './tenant.js';
+export { IProperty } from './property.js';
+export { Chat, IChat, newRooms, IMessage, Message } from './chat.js';

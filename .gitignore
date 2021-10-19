@@ -47,7 +47,9 @@
 # Env Files
 .env
 
-db-data/
+*.data/
 
 node_modules/
 dist/
+
+TODO

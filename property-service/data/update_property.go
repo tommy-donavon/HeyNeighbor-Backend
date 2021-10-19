@@ -55,12 +55,13 @@ func (pr *PropertyRepo) UpdateProperty(server_code string, updateInfo map[string
 					return fmt.Errorf("%s can not be asserted to string", value)
 				}
 				prop.PropertyManager = v
-			case "num_of_units":
-				v, ok := value.(uint)
+			case "property_img":
+				v, ok := value.(string)
+				// v, ok := value.(uint)
 				if !ok {
 					return fmt.Errorf("%s can not be asserted to string", value)
 				}
-				prop.NumOfUnits = v
+				prop.PropertyURI = v
 			}
 		}
 	}
@@ -82,7 +83,7 @@ func (pr *PropertyRepo) UpdateProperty(server_code string, updateInfo map[string
 					{Key: "property_name", Value: prop.PropertyName},
 					{Key: "address", Value: prop.PropertyAddress},
 					{Key: "property_manager", Value: prop.PropertyManager},
-					{Key: "num_of_units", Value: prop.NumOfUnits},
+					// {Key: "num_of_units", Value: prop.NumOfUnits},
 				},
 			},
 		},

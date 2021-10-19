@@ -1,54 +1,64 @@
-import { Schema, model, Model, Document } from "mongoose";
+import mongoose from 'mongoose';
 
-export interface IChat extends Document {
-    server_code: string;
-    rooms:Array<IRoom>
+export interface IChat extends mongoose.Document {
+  room_name: string;
+  property_code: string;
+  messages: Array<IMessage>;
 }
-
-interface IRoom {
-    name:string;
-    chats:Array<IMessage>
-}
-interface IMessage {
-    user_name:string;
-    image_uri:string;
-    message:string
-}
-export const newRooms = (roomNames:Array<string>):Array<IRoom> => {
-    let output:Array<IRoom> = []
-    roomNames.forEach(rn => {
-        var room:IRoom = {
-            name: rn,
-            chats: [],
-        }
-        output.push(room)
-    })
-    return output
+export interface IMessage extends mongoose.Document {
+  user_name: string;
+  image_uri: string;
+  message: string;
 }
 
-const ChatSchema:Schema = new Schema({
-    property_code: {
-        type:String,
-        required:true,
-        unique:true
+
+const MessageSchema: mongoose.Schema = new mongoose.Schema({
+  user_name: {
+    type: String,
+    required: true,
+  },
+  image_uri: {
+    type: String,
+  },
+  message: {
+    type: String,
+  },
+});
+
+const ChatSchema: mongoose.Schema = new mongoose.Schema({
+  room_name: {
+    type: String,
+    required: true,
+  },
+  property_code: {
+    type: String,
+    required: true,
+  },
+  messages: [
+    {
+      type: mongoose.SchemaTypes.ObjectId,
+      ref: 'Messages',
     },
-    rooms:[
-        {
-            room_name: {
-                type:String,
-                required:true
-            },
-            chats:[
-                {
-                    user_name:{
-                        type:String,
-                        required:true
-                    },
-                    image_uri:String,
-                    message:String
-                }
-            ]
-        }
-    ]
-})
-export const Chat: Model<IChat> = model('Chats', ChatSchema)
+  ],
+});
+
+ChatSchema.index({property_code: 1, room_name:1},{unique:true})
+export const Message: mongoose.Model<IMessage> = mongoose.model(
+  'Messages',
+  MessageSchema,
+);
+export const Chat: mongoose.Model<IChat> = mongoose.model('Chats', ChatSchema);
+
+export const newRooms =  (propCode: string, roomNames: Array<string>): IChat[] => {
+  let output:IChat[] = []
+  roomNames.forEach(async (rn) => {
+     Chat.create({
+     room_name: rn,
+     property_code: propCode,
+   }, (err, chat) => {
+     if(err) console.error(err)
+     output.push(chat)
+   });
+ });
+ return output
+};

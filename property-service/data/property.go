@@ -10,7 +10,7 @@ type (
 		PropertyName    string             `bson:"property_name" json:"property_name" validate:"required"`
 		PropertyAddress *Address           `bson:"address" json:"address" validate:"required,dive,required"`
 		PropertyManager string             `bson:"property_manager" json:"property_manager"`
-		NumOfUnits      uint               `bson:"num_of_units" json:"num_of_units" validate:"required"`
+		PropertyURI     string             `bson:"property_img" json:"property_img"`
 		ServerCode      string             `bson:"server_code" json:"server_code"`
 		Tenants         []*Tenant          `bson:"tenants" json:"tenants" validate:"dive"`
 		Channels        []string           `bson:"channels" json:"channels"`

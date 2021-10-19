@@ -1,4 +1,4 @@
-import express, { Application } from 'express';
+import express, { Application, Request, Response } from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import redisAdapter from '@socket.io/redis-adapter';
@@ -8,7 +8,8 @@ import {
   registerService,
   deregisterService,
 } from './register/register.js';
-import {SocketServer} from './models/socketServer.js';
+import { SocketServer } from './handlers/socketServer.js';
+import router from './handlers/http.js';
 
 export class ChatServer {
   public static readonly PORT: number = 8080;
@@ -20,8 +21,21 @@ export class ChatServer {
   constructor() {
     this.app = express();
     this.port = process.env.PORT || ChatServer.PORT;
+    this.app.use((req: Request, res: Response, next) => {
+      res.setHeader('Content-Type', 'application/json');
+      next();
+    });
+    this.app.use((req: Request, res: Response, next) => {
+      res.header('Access-Control-Allow-Origin', '*');
+      res.header(
+        'Access-Control-Allow-Headers',
+        'Origin, X-Requested-With, Content-Type, Accept',
+      );
+      next();
+    });
+    this.app.use(router);
     this.server = http.createServer(this.app);
-    this.io =  SocketServer.SetupServer(this.server)
+    this.io = SocketServer.SetupServer(this.server);
 
     const pubClient = redis.createClient({
       host: process.env.REDIS_HOST,
@@ -40,8 +54,6 @@ export class ChatServer {
         process.exitCode = 1;
       });
     });
-
-    
   }
 
   public getApp(): Application {

@@ -33,6 +33,7 @@ services:
       - "5438:5432"
     volumes:
       - ./postgres/config:/docker-entrypoint-initdb.d/
+      - ./postgres/postgres.data/:/var/lib/postgresql/data
   account-service:
     image: meaty/accountapi
     build:
@@ -71,6 +72,7 @@ services:
       - "27017-27019:27017-27019"
     volumes:
       - ./mongodb/prop.init.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./mongodb/mongo.data:/data/db
   property-service:
     image: meaty/propertyapi
     build:

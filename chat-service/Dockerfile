@@ -29,4 +29,4 @@ COPY --from=build /usr/dist .
 # RUN npm install pm2 -g
 
 
-CMD ["node","app.js"]
+CMD ["node", "--experimental-modules","app.js"]
