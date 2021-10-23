@@ -44,7 +44,7 @@ func NewUserHandler(log *log.Logger) *userHandler {
 			validator := my_json.NewValidator(
 				my_json.ValidationOption{
 					Name:      "phone",
-					Operation: my_json.NewValidatorFunc(`^(\d{1,2}-)?(\d{3}-){2}\d{4}$`),
+					Operation: my_json.NewValidatorFunc(`^(\d{1,2}-)?(\d{3}-){2}\d{4}$||^$`),
 				},
 			)
 			usrHandler = &userHandler{

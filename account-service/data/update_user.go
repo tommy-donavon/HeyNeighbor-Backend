@@ -65,7 +65,7 @@ func (ur *UserRepo) UpdateUser(username string, updateInfo map[string]string) er
 
 	if err := my_json.NewValidator(my_json.ValidationOption{
 		Name:      "phone",
-		Operation: my_json.NewValidatorFunc(`^(\d{1,2}-)?(\d{3}-){2}\d{4}$`),
+		Operation: my_json.NewValidatorFunc(`^(\d{1,2}-)?(\d{3}-){2}\d{4}$||^$`),
 	}).Validate(user); err != nil {
 		return err
 	}

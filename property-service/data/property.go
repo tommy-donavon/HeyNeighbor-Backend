@@ -36,10 +36,10 @@ type (
 		// AmountMonthly float64 `json:"amount_monthly"`
 	}
 	Address struct {
-		StreetAddress string `json:"street_address" validate:"required"`
-		City          string `json:"city" validate:"required"`
-		State         string `json:"state" validate:"required"`
-		ZipCode       string `json:"zip_code" validate:"required,zip"`
+		StreetAddress string `bson:"street_address" json:"street_address" validate:"required"`
+		City          string `bson:"city" json:"city" validate:"required"`
+		State         string `bson:"state" json:"state" validate:"required"`
+		ZipCode       string `bson:"zip_code" json:"zip_code" validate:"required,zip"`
 	}
 )
 

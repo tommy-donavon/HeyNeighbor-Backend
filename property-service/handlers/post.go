@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/yhung-mea7/HeyNeighbor/property-service/data"
 	json "github.com/yhung-mea7/go-rest-kit/data"
@@ -69,33 +68,33 @@ func addTenantToProperty(repo data.IPropertyCreate) http.HandlerFunc {
 			json.ToJSON(&message{"invalid request body"}, rw)
 			return
 		}
-		uValue, ok := rBody["unit_number"]
-		if !ok {
-			rw.WriteHeader(http.StatusBadRequest)
-			json.ToJSON(&message{"invalid request body"}, rw)
-			return
-		}
-		unitNumber, err := strconv.ParseUint(uValue, 10, 32)
-		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
-			json.ToJSON(&message{"unable to process unit number"}, rw)
-			return
-		}
-		rValue, ok := rBody["rent_amount"]
-		if !ok {
-			rw.WriteHeader(http.StatusBadRequest)
-			json.ToJSON(&message{"invalid request body"}, rw)
-			return
-		}
-		rentValue, err := strconv.ParseFloat(rValue, 32)
-		if err != nil {
-			rw.WriteHeader(http.StatusBadRequest)
-			json.ToJSON(&message{"unable to process rent amount"}, rw)
-			return
-		}
-		usr.UnitNumber = uint(unitNumber)
+		// uValue, ok := rBody["unit_number"]
+		// if !ok {
+		// 	rw.WriteHeader(http.StatusBadRequest)
+		// 	json.ToJSON(&message{"invalid request body"}, rw)
+		// 	return
+		// }
+		// unitNumber, err := strconv.ParseUint(uValue, 10, 32)
+		// if err != nil {
+		// 	rw.WriteHeader(http.StatusBadRequest)
+		// 	json.ToJSON(&message{"unable to process unit number"}, rw)
+		// 	return
+		// }
+		// rValue, ok := rBody["rent_amount"]
+		// if !ok {
+		// 	rw.WriteHeader(http.StatusBadRequest)
+		// 	json.ToJSON(&message{"invalid request body"}, rw)
+		// 	return
+		// }
+		// rentValue, err := strconv.ParseFloat(rValue, 32)
+		// if err != nil {
+		// 	rw.WriteHeader(http.StatusBadRequest)
+		// 	json.ToJSON(&message{"unable to process rent amount"}, rw)
+		// 	return
+		// }
+		// usr.UnitNumber = uint(unitNumber)
 		usr.Nickname = usr.Username
-		usr.Rent.AmountDue = rentValue
+		// usr.Rent.AmountDue = rentValue
 		if err := repo.AddTenantToProperty(sValue, usr); err != nil {
 			instance.log.Println("[ERROR]error adding tenant to property", err)
 			rw.WriteHeader(http.StatusBadRequest)

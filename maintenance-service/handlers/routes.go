@@ -17,8 +17,7 @@ func (mh *maintenanceHandler) SetupHandler(sm *mux.Router, repo *data.Maintenanc
 
 	postRouter := sm.Methods(http.MethodPost).Subrouter()
 	postRouter.Handle("/{code:[A-z0-9-]+}", createMaintenanceRequest(repo))
-	postRouter.Use(authMiddleware)
-	postRouter.Use(validateMaintenanceRequestMiddleware)
+	postRouter.Use(authMiddleware, validateMaintenanceRequestMiddleware)
 
 	deleteRouter := sm.Methods(http.MethodDelete).Subrouter()
 	deleteRouter.Handle("/{id:[0-9]+}", deleteMaintenanceRequest(repo))

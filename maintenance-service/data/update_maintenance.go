@@ -73,6 +73,12 @@ func (mr *MaintenanceRepo) UpdateMaintenanceRequest(id uint, username string, up
 					return fmt.Errorf("%s can not be asserted to string", value)
 				}
 				request.RejectionReason = v
+			case "severity":
+				v, ok := value.(severity)
+				if !ok {
+					return fmt.Errorf("%s can not be asserted to severity type", value)
+				}
+				request.Severity = v
 			default:
 				return fmt.Errorf("%s is not an updatable field", key)
 			}
