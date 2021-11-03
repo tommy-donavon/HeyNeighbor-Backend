@@ -30,7 +30,8 @@ func getPropertyMaintenanceRequest(repo data.IMaintenanceRead) http.HandlerFunc 
 			my_json.ToJSON(&message{err.Error()}, rw)
 			return
 		}
-		if usr.AccountType == 1 {
+		accountType := uint(1)
+		if usr.AccountType == &accountType {
 			filteredRequest := []*data.MaintenanceRequest{}
 			for _, r := range requests {
 				if r.Tenant == usr.Username {

@@ -9,6 +9,7 @@ export interface IMessage extends mongoose.Document {
   user_name: string;
   image_uri: string;
   message: string;
+  time: Date
 }
 
 
@@ -23,6 +24,10 @@ const MessageSchema: mongoose.Schema = new mongoose.Schema({
   message: {
     type: String,
   },
+  time: {
+    type: Date,
+    default: Date.now()
+  }
 });
 
 const ChatSchema: mongoose.Schema = new mongoose.Schema({

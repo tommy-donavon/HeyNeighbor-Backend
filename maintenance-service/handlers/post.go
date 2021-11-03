@@ -31,8 +31,9 @@ func createMaintenanceRequest(repo data.IMaintenanceCreate) http.HandlerFunc {
 		usr := userCtx.(*userInformation)
 		request := requestCtx.(data.MaintenanceRequest)
 
+		accountType := uint(1)
 		for _, t := range prop.Tenants {
-			if t.Username == usr.Username && usr.AccountType == 1 {
+			if t.Username == usr.Username && usr.AccountType == &accountType {
 				request.Tenant = usr.Username
 				request.UnitNumber = usr.UnitNumber
 				request.Admin = prop.PropertyManager

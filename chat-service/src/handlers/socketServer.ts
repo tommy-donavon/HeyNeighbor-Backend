@@ -42,7 +42,7 @@ export class SocketServer {
           pastChats = newRooms(prop.server_code, prop.channels);
         }
         socket.on('msg', async (msg) => {
-          socket.broadcast.to(room as string).emit('msg', msg);
+          socket.to(room as string).emit('msg', msg);
           pastChats.forEach((c) => {
             if (c.room_name === <string>room) {
               Message.create(
@@ -55,7 +55,6 @@ export class SocketServer {
                   if (err) console.error(err);
                   if (!c.messages) c.messages = [];
                   c.messages.push(im);
-                  console.log(c.messages);
                   Chat.updateOne(
                     { property_code: c.property_code, room_name: <string>room },
                     { $set: { messages: c.messages } },

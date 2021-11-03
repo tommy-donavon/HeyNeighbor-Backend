@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	my_json "github.com/yhung-mea7/go-rest-kit/data"
+	myJson "github.com/yhung-mea7/go-rest-kit/data"
 )
 
 type IMaintenancePatch interface {
@@ -55,6 +55,13 @@ func (mr *MaintenanceRepo) UpdateMaintenanceRequest(id uint, username string, up
 					return fmt.Errorf("%s can not be asserted to a boolean", value)
 				}
 				request.TenantCheckedDone = v
+			case "in_progress":
+				v, ok := value.(bool)
+				if !ok {
+					return fmt.Errorf("%s can not be asserted to a boolean", value)
+
+				}
+				request.InProgress = v
 			case "admin_checked_done":
 				v, ok := value.(bool)
 				if !ok {
@@ -74,17 +81,16 @@ func (mr *MaintenanceRepo) UpdateMaintenanceRequest(id uint, username string, up
 				}
 				request.RejectionReason = v
 			case "severity":
-				v, ok := value.(severity)
+				v, ok := value.(float64)
 				if !ok {
 					return fmt.Errorf("%s can not be asserted to severity type", value)
 				}
-				request.Severity = v
-			default:
-				return fmt.Errorf("%s is not an updatable field", key)
+				new := severity(v)
+				request.Severity = &new
 			}
 		}
 	}
-	if err := my_json.NewValidator().Validate(request); err != nil {
+	if err := myJson.NewValidator().Validate(request); err != nil {
 		return err
 	}
 	return mr.db.Save(&request).Error

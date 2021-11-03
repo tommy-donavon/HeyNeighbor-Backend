@@ -12,7 +12,7 @@ import (
 type (
 	userInformation struct {
 		Username    string `json:"username" validate:"required"`
-		AccountType uint   `json:"account_type" validate:"required"`
+		AccountType *uint  `json:"account_type" validate:"required"`
 		UnitNumber  uint   `json:"unit_number"`
 	}
 
