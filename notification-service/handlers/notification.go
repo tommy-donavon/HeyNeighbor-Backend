@@ -1,0 +1,142 @@
+package handlers
+
+import (
+	"log"
+	"net/http"
+
+	socketio "github.com/googollee/go-socket.io"
+	"github.com/googollee/go-socket.io/engineio"
+	"github.com/googollee/go-socket.io/engineio/transport"
+	"github.com/googollee/go-socket.io/engineio/transport/polling"
+	"github.com/googollee/go-socket.io/engineio/transport/websocket"
+	"github.com/yhung-mea7/HeyNeighbor/notification-service/amqp"
+	"github.com/yhung-mea7/HeyNeighbor/notification-service/data"
+	my_data "github.com/yhung-mea7/go-rest-kit/data"
+	consul_register "github.com/yhung-mea7/go-rest-kit/register"
+)
+
+type (
+	NotificationHandler struct {
+		log       *log.Logger
+		repo      *data.NotificationRepo
+		messenger *amqp.Messenger
+		Server    *socketio.Server
+		reg       *consul_register.ConsulClient
+	}
+	userInformation struct {
+		Username string `json:"username"`
+		UserType int    `json:"user_type"`
+	}
+)
+
+func NewNotificationHandler(repo *data.NotificationRepo, log *log.Logger, messenger *amqp.Messenger, reg *consul_register.ConsulClient) *NotificationHandler {
+	messenger.Consume()
+	return &NotificationHandler{
+		log:       log,
+		repo:      repo,
+		messenger: messenger,
+		reg:       reg,
+	}
+}
+
+func (nh *NotificationHandler) NotificationConnection() *socketio.Server {
+	nh.log.Println("GET SOCKET")
+	server := socketio.NewServer(&engineio.Options{
+		Transports: []transport.Transport{
+			&polling.Transport{
+				CheckOrigin: func(r *http.Request) bool {
+					return true
+				},
+			},
+			&websocket.Transport{
+				CheckOrigin: func(r *http.Request) bool {
+					return true
+				},
+			},
+		},
+	})
+	userInfo := userInformation{}
+	sc := make(chan bool)
+
+	server.OnConnect("/", func(s socketio.Conn) error {
+		s.SetContext("")
+		nh.log.Println("connected:", s.ID())
+		s.Emit("authorization")
+		return nil
+	})
+
+	server.OnEvent("/", "request", func(s socketio.Conn, msg string) {
+		resp, err := nh.SendNewRequest("users-service", "GET", "", map[string]string{"Authorization": msg})
+		if err != nil {
+			nh.log.Println(err)
+		}
+
+		if err := my_data.FromJSON(&userInfo, resp.Body); err != nil {
+			nh.log.Println(err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != http.StatusOK {
+			nh.log.Println("Unauthorized user")
+			s.Close()
+			return
+		}
+		go func() {
+			for {
+				select {
+				case <-sc:
+					return
+				default:
+					nc, err := nh.repo.RetrieveNotifications(userInfo.Username)
+					if err != nil {
+						nh.log.Println(err)
+					}
+					notes := nc.Notification
+					for _, v := range notes {
+						s.Emit("notification", v)
+						notes = notes[1:]
+					}
+					nc.Notification = notes
+					err = nh.repo.SaveNotifications(nc)
+					if err != nil {
+						nh.log.Println(err)
+					}
+				}
+			}
+		}()
+	})
+
+	server.OnError("/", func(s socketio.Conn, e error) {
+		log.Println("[ERROR]:", e)
+		sc <- true
+	})
+
+	server.OnDisconnect("/", func(s socketio.Conn, reason string) {
+		log.Println("[CLOSED]:", reason)
+		sc <- true
+	})
+	return server
+}
+
+func (nh *NotificationHandler) HealthCheck() http.HandlerFunc {
+	return func(rw http.ResponseWriter, r *http.Request) {
+		my_data.ToJSON(&struct {
+			Message string `json:"message"`
+		}{"service good to go"}, rw)
+	}
+}
+func (ph *NotificationHandler) SendNewRequest(serviceName, methodType, endpoint string, headerOptions map[string]string) (*http.Response, error) {
+	ser, err := ph.reg.LookUpService(serviceName)
+	if err != nil {
+		return nil, err
+	}
+	ph.log.Println(ser.GetHTTP() + endpoint)
+	req, err := http.NewRequest(methodType, ser.GetHTTP()+endpoint, nil)
+	if err != nil {
+		return nil, err
+	}
+	for key, value := range headerOptions {
+		req.Header.Set(key, value)
+	}
+	client := &http.Client{}
+	return client.Do(req)
+}

@@ -113,11 +113,25 @@ services:
     hostname: chat-redis-store
     ports:
       - 6379:6379
+  message-broker:
+    image: rabbitmq:3-management
+    container_name: message-broker
+    hostname: rabbit
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+  notification-service:
+    image: meaty/notificationapi
+    build:
+      context: ./notification-service
+      dockerfile: dockerfile
+    environment:
+      - PORT=:8080
+      - REDIS_HOST=chat-redis-store
+      - REDIS_PORT=6379
+      - CONSUL_HTTP_ADDR=consul:8500
+      - RABBIT_CONN=amqp://guest:guest@rabbit:5672/
+    ports:
+      - 8080
+    restart: unless-stopped
 
-  # message-broker:
-  #   image: rabbitmq:3-management
-  #   container_name: message-broker
-  #   hostname: rabbit
-  #   ports:
-  #     - '5672:5672'
-  #     - '15672:15672'

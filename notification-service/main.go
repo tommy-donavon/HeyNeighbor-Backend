@@ -1,0 +1,69 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/go-redis/redis"
+	"github.com/yhung-mea7/HeyNeighbor/notification-service/amqp"
+	"github.com/yhung-mea7/HeyNeighbor/notification-service/data"
+	"github.com/yhung-mea7/HeyNeighbor/notification-service/handlers"
+	consul_register "github.com/yhung-mea7/go-rest-kit/register"
+)
+
+func main() {
+	logger := log.New(os.Stdout, "notifications-service", log.LstdFlags)
+
+	consulClient := consul_register.NewConsulClient("notifications-service")
+	consulClient.RegisterService()
+	defer consulClient.DeregisterService()
+	redisCli := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", os.Getenv("REDIS_HOST"), os.Getenv("REDIS_PORT")),
+		Password: "",
+		DB:       0,
+	})
+	repo := data.NewNotificationRepo(redisCli)
+	nh := handlers.NewNotificationHandler(repo, logger, amqp.NewMessager(os.Getenv("RABBIT_CONN"), repo), consulClient)
+	defer redisCli.Close()
+
+	server := nh.NotificationConnection()
+	go func() {
+		if err := server.Serve(); err != nil {
+			log.Fatalf("socketio listen error: %s\n", err)
+		}
+	}()
+	defer server.Close()
+
+	http.Handle("/socket.io/", server)
+
+	http.Handle("/healthcheck", nh.HealthCheck())
+	serve := http.Server{
+		Addr:     os.Getenv("PORT"),
+		Handler:  http.DefaultServeMux,
+		ErrorLog: logger,
+	}
+
+	go func() {
+		logger.Printf("Starting server on port: %v \n", serve.Addr)
+		err := serve.ListenAndServe()
+		if err != nil {
+			logger.Printf("Error starting server: %v \n", err)
+			os.Exit(1)
+		}
+	}()
+
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, syscall.SIGTERM)
+	sig := <-c
+	logger.Println("Got Signal:", sig)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	serve.Shutdown(ctx)
+}
