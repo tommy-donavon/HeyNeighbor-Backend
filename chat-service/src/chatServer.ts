@@ -1,8 +1,8 @@
 import express, { Application, Request, Response } from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
-import redisAdapter from '@socket.io/redis-adapter';
-import redis from 'redis';
+// import redisAdapter from '@socket.io/redis-adapter';
+// import redis from 'redis';
 import {
   newConsulDetails,
   registerService,
@@ -37,12 +37,12 @@ export class ChatServer {
     this.server = http.createServer(this.app);
     this.io = SocketServer.SetupServer(this.server);
 
-    const pubClient = redis.createClient({
-      host: process.env.REDIS_HOST,
-      port: Number(process.env.REDIS_PORT),
-    });
-    const subClient = pubClient.duplicate();
-    this.io.adapter(redisAdapter.createAdapter(pubClient, subClient));
+    // const pubClient = redis.createClient({
+    //   host: process.env.REDIS_HOST,
+    //   port: Number(process.env.REDIS_PORT),
+    // });
+    // const subClient = pubClient.duplicate();
+    // this.io.adapter(redisAdapter.createAdapter(pubClient, subClient));
 
     this.server.listen(this.port, () => {
       var details = newConsulDetails('chat-service', <number>this.port);

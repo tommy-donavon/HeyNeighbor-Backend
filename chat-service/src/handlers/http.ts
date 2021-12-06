@@ -19,6 +19,7 @@ router.get('/past-msg', (req: express.Request, res: express.Response) => {
         return res.status(500).send(JSON.stringify({ error: err.message }));
       if (!chat) return res.status(404).send(JSON.stringify({ messages: [] }));
       let output = chat.messages.sort((a,b) => a.time.getTime() - b.time.getTime())
+      console.log(output)
       return res.status(200).send(JSON.stringify({ messages: output }));
     });
 });

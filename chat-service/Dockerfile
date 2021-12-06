@@ -1,4 +1,4 @@
-FROM node:12.17.0-alpine as build
+FROM node:16.13.1-alpine3.14 as build
 
 WORKDIR /usr
 
@@ -16,7 +16,7 @@ RUN npm run build
 
 ## this is stage two , where the app actually runs
 
-FROM node:12.17.0-alpine
+FROM node:16.13.1-alpine3.14
 
 WORKDIR /usr
 

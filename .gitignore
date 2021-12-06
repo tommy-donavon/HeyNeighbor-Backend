@@ -46,6 +46,7 @@
 
 # Env Files
 .env
+.env.local
 
 *.data/
 

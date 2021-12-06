@@ -45,6 +45,7 @@ services:
       - PORT=:8080
       - CONSUL_HTTP_ADDR=consul:8500
       - SECRET_KEY=${SECRET_KEY}
+      - STRIPE_KEY=${STRIPE_KEY}
     depends_on:
       - postgresdb
   maintenance-service:

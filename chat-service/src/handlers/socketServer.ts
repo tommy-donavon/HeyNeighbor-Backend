@@ -3,6 +3,8 @@ import http from 'http';
 import { getProperty, getUser } from '../utils/request.js';
 import { IProperty, Chat, IChat, newRooms, Message } from '../models/index.js';
 import url from 'url';
+// import redisAdapter from '@socket.io/redis-adapter';
+// import redis from 'redis';
 
 export class SocketServer {
   static SetupServer = (server: http.Server): Server => {
@@ -16,13 +18,21 @@ export class SocketServer {
       },
       allowEIO3: true,
     }).listen(server);
+    // const pubClient = redis.createClient({
+    //   host: process.env.REDIS_HOST,
+    //   port: Number(process.env.REDIS_PORT),
+    // });
+    // const subClient = pubClient.duplicate();
+    // io.adapter(redisAdapter.createAdapter(pubClient, subClient));
 
     const ns = io.of(/\/\w+/);
     ns.on('connection', async (socket: Socket) => {
       try {
         var room = url.parse(socket.handshake.url, true).query.room;
         var server_code = socket.nsp.name.replace(/[/]/g, '');
+
         const user = await getUser(socket.request.headers.authorization);
+        console.log(`User: ${user.username} joined namespace: ${server_code} in room: ${room}`)
 
         const prop = await getProperty(
           server_code,
@@ -32,8 +42,19 @@ export class SocketServer {
           room as string,
         );
         if (!validChannel) {
-          console.log('i disconnected');
-          socket.disconnect(true);
+          let userRoom = (<string>room).split(':');
+          if (
+            (<IProperty>prop).tenants.filter(
+              (t) => t.username.toUpperCase() === userRoom[0].toUpperCase() || t.username.toUpperCase() === userRoom[1].toUpperCase(),
+            ).length !== 2
+          ) {
+            socket.disconnect(true);
+            return;
+          }
+          Chat.create({
+            room_name: <string>room,
+            property_code: prop.server_code,
+          });
         }
         let pastChats: IChat[] = (await Chat.find({
           property_code: prop.server_code,
@@ -66,11 +87,6 @@ export class SocketServer {
         });
 
         socket.on('disconnect', (reason: string) => console.log(reason));
-        socket.on('error', (err: Error) => {
-          console.error(err);
-          socket.leave(room as string);
-          socket.disconnect(true);
-        });
       } catch (err) {
         console.error(err);
         socket.disconnect(true);
